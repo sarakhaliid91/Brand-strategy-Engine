@@ -6,6 +6,7 @@ import {
   getSectionWithCurrentVersion,
   isGenerateUnlocked,
   getRecentAIVersions,
+  getCompetitorEntries,
 } from "@/lib/sections/queries";
 import { SECTION_TYPES, SectionType } from "@/lib/sections/types";
 import { SECTION_DEFINITIONS } from "@/lib/sections/definitions";
@@ -16,7 +17,12 @@ import {
   approveSectionAction,
   generateSectionAction,
   selectVersionAction,
+  addCompetitorAction,
+  researchCompetitorAction,
+  deleteCompetitorAction,
+  synthesizeCompetitorsAction,
 } from "./actions";
+import { CompetitorResearchResult } from "@/lib/sections/content-types";
 import {
   PurposeContent,
   VisionContent,
@@ -354,6 +360,146 @@ function BrandStoryForm({ content }: { content: BrandStoryContent }) {
   );
 }
 
+type CompetitorEntry = {
+  id: string;
+  competitorName: string;
+  competitorUrl: string | null;
+  researchResult: unknown;
+};
+
+function CompetitorAuditPanel({
+  projectId,
+  entries,
+  hasAnyResearch,
+}: {
+  projectId: string;
+  entries: CompetitorEntry[];
+  hasAnyResearch: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      <form
+        action={addCompetitorAction.bind(null, projectId)}
+        className="flex flex-wrap gap-2 rounded-xl border border-zinc-200 bg-white p-4"
+      >
+        <input
+          name="name"
+          placeholder="Competitor name"
+          required
+          className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+        />
+        <input
+          name="url"
+          placeholder="Website / social URL (optional)"
+          className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+        />
+        <button
+          type="submit"
+          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+        >
+          Add competitor
+        </button>
+      </form>
+
+      {entries.length === 0 ? (
+        <p className="text-sm text-zinc-400">
+          Add competitors above, then research each with live web search.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {entries.map((entry) => {
+            const result = entry.researchResult as CompetitorResearchResult | null;
+            return (
+              <li
+                key={entry.id}
+                className="rounded-xl border border-zinc-200 bg-white p-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-800">
+                      {entry.competitorName}
+                    </p>
+                    {entry.competitorUrl && (
+                      <p className="text-xs text-zinc-400">{entry.competitorUrl}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <form
+                      action={researchCompetitorAction.bind(null, projectId, entry.id)}
+                    >
+                      <button
+                        type="submit"
+                        className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-200"
+                      >
+                        {result ? "Re-research" : "Research (web)"}
+                      </button>
+                    </form>
+                    <form
+                      action={deleteCompetitorAction.bind(null, projectId, entry.id)}
+                    >
+                      <button
+                        type="submit"
+                        className="rounded-md px-2 py-1.5 text-xs text-zinc-400 hover:text-red-600"
+                      >
+                        Remove
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                {result && (
+                  <div className="mt-3 flex flex-col gap-1 border-t border-zinc-100 pt-3 text-xs text-zinc-600">
+                    {result.positioning && (
+                      <p>
+                        <span className="font-medium text-zinc-700">Positioning:</span>{" "}
+                        {result.positioning}
+                      </p>
+                    )}
+                    {result.strengths?.length > 0 && (
+                      <p>
+                        <span className="font-medium text-zinc-700">Strengths:</span>{" "}
+                        {result.strengths.join("; ")}
+                      </p>
+                    )}
+                    {result.weaknesses?.length > 0 && (
+                      <p>
+                        <span className="font-medium text-zinc-700">Weaknesses:</span>{" "}
+                        {result.weaknesses.join("; ")}
+                      </p>
+                    )}
+                    {result.toneDescriptors?.length > 0 && (
+                      <p>
+                        <span className="font-medium text-zinc-700">Tone:</span>{" "}
+                        {result.toneDescriptors.join(", ")}
+                      </p>
+                    )}
+                    {result.sources?.length > 0 && (
+                      <p className="text-zinc-400">
+                        Sources: {result.sources.join(", ")}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <form action={synthesizeCompetitorsAction.bind(null, projectId)}>
+        <button
+          type="submit"
+          disabled={!hasAnyResearch}
+          title={hasAnyResearch ? undefined : "Research at least one competitor first"}
+          className="rounded-md bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Synthesize comparison
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default async function SectionWizardPage({
   params,
 }: {
@@ -438,6 +584,12 @@ export default async function SectionWizardPage({
       ? String((rawContent as { statement?: string }).statement ?? "")
       : null;
 
+  const isCompetitorAudit = type === "competitor_audit";
+  const competitorEntries = isCompetitorAudit
+    ? await getCompetitorEntries(projectId)
+    : [];
+  const hasAnyResearch = competitorEntries.some((e) => e.researchResult);
+
   const isAISection = def.mode !== "manual";
   const availableProviders: AIProvider[] = isAISection
     ? getAvailableProviders()
@@ -503,6 +655,22 @@ export default async function SectionWizardPage({
               </button>
             </div>
           </form>
+        ) : isCompetitorAudit ? (
+          <>
+            <CompetitorAuditPanel
+              projectId={projectId}
+              entries={competitorEntries}
+              hasAnyResearch={hasAnyResearch}
+            />
+            {statement && (
+              <div className="mt-4 rounded-xl border border-zinc-200 bg-white p-6">
+                <p className="mb-1 text-xs text-zinc-400">Synthesized comparison</p>
+                <p className="whitespace-pre-wrap text-sm text-zinc-800">
+                  {statement}
+                </p>
+              </div>
+            )}
+          </>
         ) : (
           <div className="rounded-xl border border-zinc-200 bg-white p-6 text-sm text-zinc-500">
             This section&apos;s editor is coming in a later phase.

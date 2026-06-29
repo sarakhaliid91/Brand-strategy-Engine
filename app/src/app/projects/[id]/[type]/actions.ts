@@ -12,8 +12,20 @@ import {
   createGeneratedVersion,
   hasAIVersion,
   setCurrentVersion,
+  getCompetitorEntries,
+  addCompetitorEntry,
+  getCompetitorEntry,
+  saveCompetitorResearch,
+  deleteCompetitorEntry,
+  getApprovedContent,
+  getClientIndustryForProject,
 } from "@/lib/sections/queries";
 import { generateSectionDraft } from "@/lib/ai/generate";
+import { researchCompetitor, synthesizeCompetitors } from "@/lib/ai/research";
+import { formatApprovedContent } from "@/lib/sections/format";
+import {
+  CompetitorResearchResult,
+} from "@/lib/sections/content-types";
 import { AIProvider } from "@/lib/ai/providers/types";
 import { isProviderConfigured } from "@/lib/ai/client";
 import {
@@ -162,5 +174,95 @@ export async function selectVersionAction(
 
   await setCurrentVersion(projectId, sectionTypeRaw, versionId);
   revalidatePath(`/projects/${projectId}/${sectionTypeRaw}`);
+  revalidatePath(`/projects/${projectId}`);
+}
+
+// ---- Competitor research (competitor_audit section) ----
+
+export async function addCompetitorAction(
+  projectId: string,
+  formData: FormData,
+) {
+  await requireOwnedProject(projectId);
+  const name = String(formData.get("name") ?? "").trim();
+  const url = String(formData.get("url") ?? "").trim();
+  if (!name) return;
+
+  await addCompetitorEntry(projectId, name, url || null);
+  revalidatePath(`/projects/${projectId}/competitor_audit`);
+}
+
+export async function researchCompetitorAction(
+  projectId: string,
+  entryId: string,
+) {
+  const project = await requireOwnedProject(projectId);
+  const entry = await getCompetitorEntry(entryId);
+  if (!entry) throw new Error("Competitor not found");
+
+  const industry = await getClientIndustryForProject(projectId);
+  const result = await researchCompetitor({
+    competitorName: entry.competitorName,
+    competitorUrl: entry.competitorUrl,
+    industry,
+    language: project.language,
+  });
+
+  await saveCompetitorResearch(entryId, result);
+  revalidatePath(`/projects/${projectId}/competitor_audit`);
+}
+
+export async function deleteCompetitorAction(
+  projectId: string,
+  entryId: string,
+) {
+  await requireOwnedProject(projectId);
+  await deleteCompetitorEntry(entryId);
+  revalidatePath(`/projects/${projectId}/competitor_audit`);
+}
+
+export async function synthesizeCompetitorsAction(projectId: string) {
+  const project = await requireOwnedProject(projectId);
+
+  const rows = await getCompetitorEntries(projectId);
+  const researched = rows.filter((r) => r.researchResult);
+  if (researched.length === 0) {
+    throw new Error("Research at least one competitor before synthesizing.");
+  }
+
+  const positioningApproved = await getApprovedContent(
+    projectId,
+    "positioning_strategy",
+  );
+  const positioningContext = positioningApproved
+    ? formatApprovedContent("positioning_strategy", positioningApproved)
+    : "";
+
+  const statement = await synthesizeCompetitors({
+    entries: researched.map((r) => ({
+      name: r.competitorName,
+      result: r.researchResult as CompetitorResearchResult,
+    })),
+    positioningContext,
+    language: project.language,
+  });
+
+  const source = (await hasAIVersion(projectId, "competitor_audit"))
+    ? "ai_regenerated"
+    : "ai_generated";
+  await createGeneratedVersion(
+    projectId,
+    "competitor_audit",
+    { statement },
+    source,
+    {
+      provider: "anthropic",
+      model: "claude-sonnet-4-6",
+      competitorsResearched: researched.length,
+      generatedAt: new Date().toISOString(),
+    },
+  );
+
+  revalidatePath(`/projects/${projectId}/competitor_audit`);
   revalidatePath(`/projects/${projectId}`);
 }

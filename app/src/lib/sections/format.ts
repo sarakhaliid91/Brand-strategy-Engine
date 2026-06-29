@@ -139,7 +139,13 @@ const FORMATTERS: Record<SectionType, (content: unknown) => string> = {
   mission: (c) => formatMission(c as MissionContent),
   values: (c) => formatValues(c as ValuesContent),
   audience_persona: (c) => formatAudiencePersona(c as AudiencePersonaContent),
-  competitor_audit: (c) => JSON.stringify(c),
+  competitor_audit: (c) => {
+    const statement =
+      c && typeof c === "object" && "statement" in c
+        ? String((c as { statement?: string }).statement ?? "")
+        : "";
+    return statement ? `COMPETITOR AUDIT\n\n${statement}` : "COMPETITOR AUDIT";
+  },
   positioning_strategy: (c) => formatPositioning(c as PositioningStrategyContent),
   brand_persona: (c) => formatBrandPersona(c as BrandPersonaContent),
   core_message: (c) => formatCoreMessage(c as CoreMessageContent),

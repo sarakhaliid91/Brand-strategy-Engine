@@ -84,6 +84,20 @@ export interface CoreMessageContent {
   statement: string;
 }
 
+export interface CompetitorResearchResult {
+  positioning: string;
+  targetAudience: string;
+  strengths: string[];
+  weaknesses: string[];
+  toneDescriptors: string[];
+  sources: string[];
+}
+
+/** The competitor_audit section's own content holds the synthesized comparison. */
+export interface CompetitorAuditContent {
+  statement: string;
+}
+
 export interface BrandStoryContent {
   characterName: string;
   guidance: string;

@@ -1,6 +1,12 @@
 import { and, eq, desc, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { sections, sectionVersions, projects, clients } from "@/lib/db/schema";
+import {
+  sections,
+  sectionVersions,
+  projects,
+  clients,
+  competitorEntries,
+} from "@/lib/db/schema";
 import { SectionType } from "./types";
 import { SECTION_DEFINITIONS, ORDERED_SECTION_TYPES } from "./definitions";
 
@@ -11,6 +17,18 @@ export async function getProject(projectId: string) {
     .where(eq(projects.id, projectId))
     .limit(1);
   return project;
+}
+
+export async function getClientIndustryForProject(
+  projectId: string,
+): Promise<string> {
+  const [row] = await db
+    .select({ industry: clients.industry })
+    .from(projects)
+    .innerJoin(clients, eq(clients.id, projects.clientId))
+    .where(eq(projects.id, projectId))
+    .limit(1);
+  return row?.industry ?? "";
 }
 
 export async function getProjectOwnedByUser(projectId: string, userId: string) {
@@ -244,6 +262,58 @@ export async function hasAIVersion(
 ): Promise<boolean> {
   const recent = await getRecentAIVersions(projectId, sectionType, 1);
   return recent.length > 0;
+}
+
+/** Competitor entries belong to the competitor_audit section of a project. */
+async function getCompetitorSectionId(projectId: string): Promise<string> {
+  const section = await getSection(projectId, "competitor_audit");
+  if (!section) throw new Error("competitor_audit section not found");
+  return section.id;
+}
+
+export async function getCompetitorEntries(projectId: string) {
+  const sectionId = await getCompetitorSectionId(projectId);
+  return db
+    .select()
+    .from(competitorEntries)
+    .where(eq(competitorEntries.sectionId, sectionId))
+    .orderBy(competitorEntries.createdAt);
+}
+
+export async function addCompetitorEntry(
+  projectId: string,
+  competitorName: string,
+  competitorUrl: string | null,
+) {
+  const sectionId = await getCompetitorSectionId(projectId);
+  const [entry] = await db
+    .insert(competitorEntries)
+    .values({ sectionId, competitorName, competitorUrl })
+    .returning();
+  return entry;
+}
+
+export async function getCompetitorEntry(entryId: string) {
+  const [entry] = await db
+    .select()
+    .from(competitorEntries)
+    .where(eq(competitorEntries.id, entryId))
+    .limit(1);
+  return entry ?? null;
+}
+
+export async function saveCompetitorResearch(
+  entryId: string,
+  researchResult: unknown,
+) {
+  await db
+    .update(competitorEntries)
+    .set({ researchResult, researchedAt: new Date() })
+    .where(eq(competitorEntries.id, entryId));
+}
+
+export async function deleteCompetitorEntry(entryId: string) {
+  await db.delete(competitorEntries).where(eq(competitorEntries.id, entryId));
 }
 
 /** Point the section at an existing version (used by "Make current"). Re-opens review. */
