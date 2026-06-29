@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { sections, sectionVersions, projects, clients } from "@/lib/db/schema";
 import { SectionType } from "./types";
@@ -177,5 +177,63 @@ export async function createGeneratedVersion(
   await db
     .update(sections)
     .set({ currentVersionId: newVersion.id, status: "in_review" })
+    .where(eq(sections.id, section.id));
+}
+
+/** Most-recent AI-generated drafts for a section (for the A/B "Recent drafts" list). */
+export async function getRecentAIVersions(
+  projectId: string,
+  sectionType: SectionType,
+  limit = 4,
+) {
+  const section = await getSection(projectId, sectionType);
+  if (!section) return [];
+
+  return db
+    .select()
+    .from(sectionVersions)
+    .where(
+      and(
+        eq(sectionVersions.sectionId, section.id),
+        inArray(sectionVersions.source, ["ai_generated", "ai_regenerated"]),
+      ),
+    )
+    .orderBy(desc(sectionVersions.versionNumber))
+    .limit(limit);
+}
+
+/** True if at least one AI-generated draft already exists for the section. */
+export async function hasAIVersion(
+  projectId: string,
+  sectionType: SectionType,
+): Promise<boolean> {
+  const recent = await getRecentAIVersions(projectId, sectionType, 1);
+  return recent.length > 0;
+}
+
+/** Point the section at an existing version (used by "Make current"). Re-opens review. */
+export async function setCurrentVersion(
+  projectId: string,
+  sectionType: SectionType,
+  versionId: string,
+) {
+  const section = await getSection(projectId, sectionType);
+  if (!section) throw new Error(`Section ${sectionType} not found`);
+
+  const [version] = await db
+    .select()
+    .from(sectionVersions)
+    .where(
+      and(
+        eq(sectionVersions.id, versionId),
+        eq(sectionVersions.sectionId, section.id),
+      ),
+    )
+    .limit(1);
+  if (!version) throw new Error("Version not found for this section");
+
+  await db
+    .update(sections)
+    .set({ currentVersionId: version.id, status: "in_review" })
     .where(eq(sections.id, section.id));
 }

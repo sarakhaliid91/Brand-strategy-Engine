@@ -10,8 +10,12 @@ import {
   saveDraftContent,
   approveSection,
   createGeneratedVersion,
+  hasAIVersion,
+  setCurrentVersion,
 } from "@/lib/sections/queries";
 import { generateSectionDraft } from "@/lib/ai/generate";
+import { AIProvider } from "@/lib/ai/providers/types";
+import { isProviderConfigured } from "@/lib/ai/client";
 import {
   parsePurposeForm,
   parseVisionForm,
@@ -75,12 +79,23 @@ export async function approveSectionAction(
   revalidatePath(`/projects/${projectId}`);
 }
 
+function isProvider(value: string): value is AIProvider {
+  return value === "anthropic" || value === "openai";
+}
+
 export async function generateSectionAction(
   projectId: string,
   sectionTypeRaw: string,
+  providerRaw: string,
 ) {
   const project = await requireOwnedProject(projectId);
   if (!isSectionType(sectionTypeRaw)) throw new Error("Invalid section type");
+  if (!isProvider(providerRaw)) throw new Error("Invalid AI provider");
+  if (!isProviderConfigured(providerRaw)) {
+    throw new Error(
+      `${providerRaw === "anthropic" ? "Claude" : "ChatGPT"} is not configured. Add its API key to .env.local.`,
+    );
+  }
 
   const existing = await getSectionWithCurrentVersion(projectId, sectionTypeRaw);
   if (!existing?.currentVersion) {
@@ -93,9 +108,12 @@ export async function generateSectionAction(
     sectionTypeRaw,
     currentContent,
     project.language,
+    providerRaw,
   );
 
-  const source = existing?.currentVersion ? "ai_regenerated" : "ai_generated";
+  const source = (await hasAIVersion(projectId, sectionTypeRaw))
+    ? "ai_regenerated"
+    : "ai_generated";
   await createGeneratedVersion(
     projectId,
     sectionTypeRaw,
@@ -104,6 +122,19 @@ export async function generateSectionAction(
     generationMetadata,
   );
 
+  revalidatePath(`/projects/${projectId}/${sectionTypeRaw}`);
+  revalidatePath(`/projects/${projectId}`);
+}
+
+export async function selectVersionAction(
+  projectId: string,
+  sectionTypeRaw: string,
+  versionId: string,
+) {
+  await requireOwnedProject(projectId);
+  if (!isSectionType(sectionTypeRaw)) throw new Error("Invalid section type");
+
+  await setCurrentVersion(projectId, sectionTypeRaw, versionId);
   revalidatePath(`/projects/${projectId}/${sectionTypeRaw}`);
   revalidatePath(`/projects/${projectId}`);
 }
