@@ -23,12 +23,21 @@ import {
   MissionContent,
   ValuesContent,
   AudiencePersonaContent,
+  PositioningStrategyContent,
+  BrandPersonaContent,
+  CoreMessageContent,
+  BrandStoryContent,
   emptyPurposeContent,
   emptyVisionContent,
   emptyMissionContent,
   emptyValuesContent,
   emptyAudiencePersonaContent,
+  emptyPositioningStrategyContent,
+  emptyBrandPersonaContent,
+  emptyCoreMessageContent,
+  emptyBrandStoryContent,
   BRAND_ARCHETYPES,
+  BRAND_INTERVIEW_QUESTIONS,
 } from "@/lib/sections/content-types";
 
 function isSectionType(value: string): value is SectionType {
@@ -216,6 +225,135 @@ function AudiencePersonaForm({ content }: { content: AudiencePersonaContent }) {
   );
 }
 
+function PositioningStrategyForm({
+  content,
+}: {
+  content: PositioningStrategyContent;
+}) {
+  return (
+    <>
+      <Field label="Unmet needs" name="unmetNeeds" defaultValue={content.unmetNeeds.join("\n")} multiline />
+      <Field label="Opportunities" name="opportunities" defaultValue={content.opportunities.join("\n")} multiline />
+      <Field label="Ideas" name="ideas" defaultValue={content.ideas.join("\n")} multiline />
+      <fieldset className="rounded-md border border-zinc-200 p-3">
+        <legend className="px-1 text-xs font-medium text-zinc-600">
+          Differentiator shortlist (one per line, aligned by row)
+        </legend>
+        <div className="flex flex-col gap-2">
+          <Field label="Ideas" name="differentiatorIdeas" defaultValue={content.differentiators.map((d) => d.idea).join("\n")} multiline />
+          <Field label="Added value" name="differentiatorAddedValues" defaultValue={content.differentiators.map((d) => d.addedValue).join("\n")} multiline />
+          <Field label="Enhances experience" name="differentiatorEnhances" defaultValue={content.differentiators.map((d) => d.enhancesExperience).join("\n")} multiline />
+          <Field label="Rating" name="differentiatorRatings" defaultValue={content.differentiators.map((d) => d.rating).join("\n")} multiline />
+        </div>
+      </fieldset>
+      <fieldset className="rounded-md border border-zinc-200 p-3">
+        <legend className="px-1 text-xs font-medium text-zinc-600">USP inputs</legend>
+        <div className="flex flex-col gap-2">
+          <Field label="End result delivered" name="uspEndResult" defaultValue={content.uspEndResult} />
+          <Field label="Benefit of the difference" name="uspBenefit" defaultValue={content.uspBenefit} />
+        </div>
+      </fieldset>
+      <fieldset className="rounded-md border border-zinc-200 p-3">
+        <legend className="px-1 text-xs font-medium text-zinc-600">
+          Positioning statement inputs
+        </legend>
+        <div className="flex flex-col gap-2">
+          <Field label="We help…" name="posWeHelp" defaultValue={content.posWeHelp} />
+          <Field label="Who…" name="posWho" defaultValue={content.posWho} />
+          <Field label="To achieve / experience…" name="posToAchieve" defaultValue={content.posToAchieve} />
+          <Field label="Unlike (the ordinary alternative)…" name="posUnlike" defaultValue={content.posUnlike} />
+          <Field label="Our solution…" name="posOurSolution" defaultValue={content.posOurSolution} />
+        </div>
+      </fieldset>
+    </>
+  );
+}
+
+function BrandPersonaForm({ content }: { content: BrandPersonaContent }) {
+  return (
+    <>
+      <fieldset className="rounded-md border border-zinc-200 p-3">
+        <legend className="px-1 text-xs font-medium text-zinc-600">
+          Brand archetype mix / role (0 - 1 weight per archetype)
+        </legend>
+        <div className="grid grid-cols-3 gap-2">
+          {BRAND_ARCHETYPES.map((archetype) => {
+            const existing = content.archetypeRoleMix.find((a) => a.archetype === archetype);
+            return (
+              <Field
+                key={archetype}
+                label={archetype}
+                name={`role_${archetype}`}
+                defaultValue={String(existing?.weight ?? 0)}
+              />
+            );
+          })}
+        </div>
+      </fieldset>
+      <fieldset className="rounded-md border border-zinc-200 p-3">
+        <legend className="px-1 text-xs font-medium text-zinc-600">Personality</legend>
+        <div className="flex flex-col gap-2">
+          <Field label="Characteristics" name="personalityCharacteristics" defaultValue={content.personalityCharacteristics} />
+          <Field label="Desires" name="personalityDesires" defaultValue={content.personalityDesires} />
+          <Field label="Fears" name="personalityFears" defaultValue={content.personalityFears} />
+        </div>
+      </fieldset>
+      <fieldset className="rounded-md border border-zinc-200 p-3">
+        <legend className="px-1 text-xs font-medium text-zinc-600">Appearance</legend>
+        <div className="flex flex-col gap-2">
+          <Field label="Characteristics" name="appearanceCharacteristics" defaultValue={content.appearanceCharacteristics} />
+          <Field label="Dress / style / clothes" name="dressStyle" defaultValue={content.dressStyle} />
+          <Field label="Accessories" name="accessories" defaultValue={content.accessories} />
+        </div>
+      </fieldset>
+      <Field label="Tone of voice" name="toneOfVoice" defaultValue={content.toneOfVoice} multiline />
+      <Field label="Language keywords / phrases" name="languageKeywords" defaultValue={content.languageKeywords} multiline />
+      <fieldset className="rounded-md border border-zinc-200 p-3">
+        <legend className="px-1 text-xs font-medium text-zinc-600">Brand interview</legend>
+        <div className="flex flex-col gap-2">
+          {BRAND_INTERVIEW_QUESTIONS.map((question, i) => {
+            const existing = content.interview.find((q) => q.question === question);
+            return (
+              <Field
+                key={i}
+                label={question}
+                name={`interview_${i}`}
+                defaultValue={existing?.answer ?? ""}
+                multiline
+              />
+            );
+          })}
+        </div>
+      </fieldset>
+    </>
+  );
+}
+
+function CoreMessageForm({ content }: { content: CoreMessageContent }) {
+  return (
+    <Field
+      label="Optional guidance for the AI (tone, emphasis, anything to steer the message map)"
+      name="guidance"
+      defaultValue={content.guidance}
+      multiline
+    />
+  );
+}
+
+function BrandStoryForm({ content }: { content: BrandStoryContent }) {
+  return (
+    <>
+      <Field label="Hero's name (optional — the AI will invent one if blank)" name="characterName" defaultValue={content.characterName} />
+      <Field
+        label="Optional guidance for the AI (tone, emphasis, anything to steer the story)"
+        name="guidance"
+        defaultValue={content.guidance}
+        multiline
+      />
+    </>
+  );
+}
+
 export default async function SectionWizardPage({
   params,
 }: {
@@ -260,6 +398,34 @@ export default async function SectionWizardPage({
       formBody = (
         <AudiencePersonaForm
           content={(rawContent as AudiencePersonaContent) ?? emptyAudiencePersonaContent()}
+        />
+      );
+      break;
+    case "positioning_strategy":
+      formBody = (
+        <PositioningStrategyForm
+          content={(rawContent as PositioningStrategyContent) ?? emptyPositioningStrategyContent()}
+        />
+      );
+      break;
+    case "brand_persona":
+      formBody = (
+        <BrandPersonaForm
+          content={(rawContent as BrandPersonaContent) ?? emptyBrandPersonaContent()}
+        />
+      );
+      break;
+    case "core_message":
+      formBody = (
+        <CoreMessageForm
+          content={(rawContent as CoreMessageContent) ?? emptyCoreMessageContent()}
+        />
+      );
+      break;
+    case "brand_story":
+      formBody = (
+        <BrandStoryForm
+          content={(rawContent as BrandStoryContent) ?? emptyBrandStoryContent()}
         />
       );
       break;

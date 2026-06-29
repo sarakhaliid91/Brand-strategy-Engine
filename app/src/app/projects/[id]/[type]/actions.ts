@@ -22,6 +22,10 @@ import {
   parseMissionForm,
   parseValuesForm,
   parseAudiencePersonaForm,
+  parsePositioningStrategyForm,
+  parseBrandPersonaForm,
+  parseCoreMessageForm,
+  parseBrandStoryForm,
 } from "@/lib/sections/content-types";
 
 async function requireOwnedProject(projectId: string) {
@@ -48,6 +52,14 @@ function parseContentForm(sectionType: SectionType, formData: FormData) {
       return parseValuesForm(formData);
     case "audience_persona":
       return parseAudiencePersonaForm(formData);
+    case "positioning_strategy":
+      return parsePositioningStrategyForm(formData);
+    case "brand_persona":
+      return parseBrandPersonaForm(formData);
+    case "core_message":
+      return parseCoreMessageForm(formData);
+    case "brand_story":
+      return parseBrandStoryForm(formData);
     default:
       throw new Error(`No form parser for ${sectionType}`);
   }
@@ -61,7 +73,21 @@ export async function saveSectionAction(
   await requireOwnedProject(projectId);
   if (!isSectionType(sectionTypeRaw)) throw new Error("Invalid section type");
 
-  const content = parseContentForm(sectionTypeRaw, formData);
+  const content = parseContentForm(sectionTypeRaw, formData) as unknown as Record<
+    string,
+    unknown
+  >;
+
+  // The notes form doesn't render the AI-written `statement`, so preserve any
+  // existing one rather than blanking it when the strategist re-saves notes.
+  const existing = await getSectionWithCurrentVersion(projectId, sectionTypeRaw);
+  const prev = existing?.currentVersion?.content as
+    | Record<string, unknown>
+    | undefined;
+  if (prev && typeof prev.statement === "string" && !content.statement) {
+    content.statement = prev.statement;
+  }
+
   await saveDraftContent(projectId, sectionTypeRaw, content, "manual_entry");
   revalidatePath(`/projects/${projectId}/${sectionTypeRaw}`);
   revalidatePath(`/projects/${projectId}`);

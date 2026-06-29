@@ -43,6 +43,67 @@ export interface ValuesContent {
   coreValues: ValuesCoreValue[];
 }
 
+export interface DifferentiatorIdea {
+  idea: string;
+  addedValue: string;
+  enhancesExperience: string;
+  rating: string;
+}
+
+export interface PositioningStrategyContent {
+  unmetNeeds: string[];
+  opportunities: string[];
+  ideas: string[];
+  differentiators: DifferentiatorIdea[];
+  uspEndResult: string;
+  uspBenefit: string;
+  posWeHelp: string;
+  posWho: string;
+  posToAchieve: string;
+  posUnlike: string;
+  posOurSolution: string;
+  statement: string;
+}
+
+export interface BrandPersonaContent {
+  archetypeRoleMix: { archetype: string; weight: number }[];
+  personalityCharacteristics: string;
+  personalityDesires: string;
+  personalityFears: string;
+  appearanceCharacteristics: string;
+  dressStyle: string;
+  accessories: string;
+  toneOfVoice: string;
+  languageKeywords: string;
+  interview: { question: string; answer: string }[];
+  statement: string;
+}
+
+export interface CoreMessageContent {
+  guidance: string;
+  statement: string;
+}
+
+export interface BrandStoryContent {
+  characterName: string;
+  guidance: string;
+  statement: string;
+}
+
+export const BRAND_INTERVIEW_QUESTIONS = [
+  "What do you love and why?",
+  "What do you dislike / hate and why?",
+  "Where do you provide the most value to your audience?",
+  "What is the one thing you would change about your industry, and why?",
+  "Why is your market a great space to be in?",
+  "What is the purpose of your existence?",
+  "What is important to you in the way you do business?",
+  "What does your audience need to be protected against?",
+  "What are you passionate about?",
+  "What impact would you like to have on your customers?",
+  "What would you like your customers to say about you?",
+] as const;
+
 export interface AudiencePersonaContent {
   personaName: string;
   demographics: {
@@ -178,6 +239,50 @@ export function emptyValuesContent(): ValuesContent {
   return { groupPerceptions: [], shortlist: [], coreValues: [] };
 }
 
+export function emptyPositioningStrategyContent(): PositioningStrategyContent {
+  return {
+    unmetNeeds: [],
+    opportunities: [],
+    ideas: [],
+    differentiators: [],
+    uspEndResult: "",
+    uspBenefit: "",
+    posWeHelp: "",
+    posWho: "",
+    posToAchieve: "",
+    posUnlike: "",
+    posOurSolution: "",
+    statement: "",
+  };
+}
+
+export function emptyBrandPersonaContent(): BrandPersonaContent {
+  return {
+    archetypeRoleMix: BRAND_ARCHETYPES.map((a) => ({ archetype: a, weight: 0 })),
+    personalityCharacteristics: "",
+    personalityDesires: "",
+    personalityFears: "",
+    appearanceCharacteristics: "",
+    dressStyle: "",
+    accessories: "",
+    toneOfVoice: "",
+    languageKeywords: "",
+    interview: BRAND_INTERVIEW_QUESTIONS.map((question) => ({
+      question,
+      answer: "",
+    })),
+    statement: "",
+  };
+}
+
+export function emptyCoreMessageContent(): CoreMessageContent {
+  return { guidance: "", statement: "" };
+}
+
+export function emptyBrandStoryContent(): BrandStoryContent {
+  return { characterName: "", guidance: "", statement: "" };
+}
+
 function linesOf(formData: FormData, name: string): string[] {
   return String(formData.get(name) ?? "")
     .split("\n")
@@ -297,5 +402,72 @@ export function parseAudiencePersonaForm(
       archetype,
       weight: Number(formData.get(`archetype_${archetype}`) ?? 0) || 0,
     })),
+  };
+}
+
+export function parsePositioningStrategyForm(
+  formData: FormData,
+): PositioningStrategyContent {
+  const diffIdeas = linesOf(formData, "differentiatorIdeas");
+  const diffValues = linesOf(formData, "differentiatorAddedValues");
+  const diffEnhances = linesOf(formData, "differentiatorEnhances");
+  const diffRatings = linesOf(formData, "differentiatorRatings");
+  const differentiators: DifferentiatorIdea[] = diffIdeas.map((idea, i) => ({
+    idea,
+    addedValue: diffValues[i] ?? "",
+    enhancesExperience: diffEnhances[i] ?? "",
+    rating: diffRatings[i] ?? "",
+  }));
+
+  return {
+    unmetNeeds: linesOf(formData, "unmetNeeds"),
+    opportunities: linesOf(formData, "opportunities"),
+    ideas: linesOf(formData, "ideas"),
+    differentiators,
+    uspEndResult: strOf(formData, "uspEndResult"),
+    uspBenefit: strOf(formData, "uspBenefit"),
+    posWeHelp: strOf(formData, "posWeHelp"),
+    posWho: strOf(formData, "posWho"),
+    posToAchieve: strOf(formData, "posToAchieve"),
+    posUnlike: strOf(formData, "posUnlike"),
+    posOurSolution: strOf(formData, "posOurSolution"),
+    statement: strOf(formData, "statement"),
+  };
+}
+
+export function parseBrandPersonaForm(formData: FormData): BrandPersonaContent {
+  return {
+    archetypeRoleMix: BRAND_ARCHETYPES.map((archetype) => ({
+      archetype,
+      weight: Number(formData.get(`role_${archetype}`) ?? 0) || 0,
+    })),
+    personalityCharacteristics: strOf(formData, "personalityCharacteristics"),
+    personalityDesires: strOf(formData, "personalityDesires"),
+    personalityFears: strOf(formData, "personalityFears"),
+    appearanceCharacteristics: strOf(formData, "appearanceCharacteristics"),
+    dressStyle: strOf(formData, "dressStyle"),
+    accessories: strOf(formData, "accessories"),
+    toneOfVoice: strOf(formData, "toneOfVoice"),
+    languageKeywords: strOf(formData, "languageKeywords"),
+    interview: BRAND_INTERVIEW_QUESTIONS.map((question, i) => ({
+      question,
+      answer: strOf(formData, `interview_${i}`),
+    })),
+    statement: strOf(formData, "statement"),
+  };
+}
+
+export function parseCoreMessageForm(formData: FormData): CoreMessageContent {
+  return {
+    guidance: strOf(formData, "guidance"),
+    statement: strOf(formData, "statement"),
+  };
+}
+
+export function parseBrandStoryForm(formData: FormData): BrandStoryContent {
+  return {
+    characterName: strOf(formData, "characterName"),
+    guidance: strOf(formData, "guidance"),
+    statement: strOf(formData, "statement"),
   };
 }

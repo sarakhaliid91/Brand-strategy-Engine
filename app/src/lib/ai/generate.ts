@@ -9,7 +9,22 @@ import {
 } from "@/lib/sections/queries";
 import { buildPurposePrompt } from "@/lib/prompts/purpose";
 import { buildVisionPrompt } from "@/lib/prompts/vision";
-import { PurposeContent, VisionContent } from "@/lib/sections/content-types";
+import { buildMissionPrompt } from "@/lib/prompts/mission";
+import { buildValuesPrompt } from "@/lib/prompts/values";
+import { buildPositioningPrompt } from "@/lib/prompts/positioning";
+import { buildBrandPersonaPrompt } from "@/lib/prompts/brand-persona";
+import { buildCoreMessagePrompt } from "@/lib/prompts/core-message";
+import { buildBrandStoryPrompt } from "@/lib/prompts/brand-story";
+import {
+  PurposeContent,
+  VisionContent,
+  MissionContent,
+  ValuesContent,
+  PositioningStrategyContent,
+  BrandPersonaContent,
+  CoreMessageContent,
+  BrandStoryContent,
+} from "@/lib/sections/content-types";
 
 /**
  * Generates a draft for one section, gathering approved context from its
@@ -53,12 +68,62 @@ export async function generateSectionDraft(
         contextBlocks,
       });
       break;
+    case "mission":
+      prompt = buildMissionPrompt({
+        content: currentContent as MissionContent,
+        language,
+        contextBlocks,
+      });
+      break;
+    case "values":
+      prompt = buildValuesPrompt({
+        content: currentContent as ValuesContent,
+        language,
+        contextBlocks,
+      });
+      break;
+    case "positioning_strategy":
+      prompt = buildPositioningPrompt({
+        content: currentContent as PositioningStrategyContent,
+        language,
+        contextBlocks,
+      });
+      break;
+    case "brand_persona":
+      prompt = buildBrandPersonaPrompt({
+        content: currentContent as BrandPersonaContent,
+        language,
+        contextBlocks,
+      });
+      break;
+    case "core_message":
+      prompt = buildCoreMessagePrompt({
+        content: currentContent as CoreMessageContent,
+        language,
+        contextBlocks,
+      });
+      break;
+    case "brand_story":
+      prompt = buildBrandStoryPrompt({
+        content: currentContent as BrandStoryContent,
+        language,
+        contextBlocks,
+      });
+      break;
     default:
       throw new Error(`No prompt template implemented yet for ${sectionType}`);
   }
 
+  // Long-form sections (multi-block / multi-chapter) need a bigger budget.
+  const LONG_FORM: SectionType[] = ["core_message", "brand_story"];
+  const maxTokens = LONG_FORM.includes(sectionType) ? 4096 : 1024;
+
   const model = getModelFor(provider);
-  const statement = await getGenerator(provider).generateText({ prompt, model });
+  const statement = await getGenerator(provider).generateText({
+    prompt,
+    model,
+    maxTokens,
+  });
 
   return {
     content: { ...(currentContent as object), statement },

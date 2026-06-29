@@ -5,6 +5,9 @@ import {
   MissionContent,
   ValuesContent,
   AudiencePersonaContent,
+  PositioningStrategyContent,
+  BrandPersonaContent,
+  CoreMessageContent,
 } from "./content-types";
 
 const bullets = (label: string, items: string[]) =>
@@ -86,6 +89,50 @@ function formatAudiencePersona(c: AudiencePersonaContent): string {
     .join("\n\n");
 }
 
+function formatPositioning(c: PositioningStrategyContent): string {
+  return [
+    "POSITIONING STRATEGY",
+    bullets("Unmet needs", c.unmetNeeds),
+    bullets("Opportunities", c.opportunities),
+    c.differentiators.length
+      ? `Differentiators:\n${c.differentiators
+          .map(
+            (d) =>
+              `- ${d.idea}${d.addedValue ? ` — ${d.addedValue}` : ""}${d.rating ? ` (rating ${d.rating})` : ""}`,
+          )
+          .join("\n")}`
+      : "",
+    c.statement ? `Positioning / USP:\n${c.statement}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function formatBrandPersona(c: BrandPersonaContent): string {
+  const topRoles = c.archetypeRoleMix
+    .filter((a) => a.weight > 0)
+    .sort((a, b) => b.weight - a.weight)
+    .map((a) => `${a.archetype} (${a.weight})`)
+    .join(", ");
+  return [
+    "BRAND PERSONA",
+    topRoles ? `Brand archetype mix: ${topRoles}` : "",
+    c.personalityCharacteristics
+      ? `Personality: ${c.personalityCharacteristics}`
+      : "",
+    c.toneOfVoice ? `Tone of voice: ${c.toneOfVoice}` : "",
+    c.statement ? `Persona summary:\n${c.statement}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function formatCoreMessage(c: CoreMessageContent): string {
+  return ["CORE MESSAGE", c.statement || "(no draft yet)"]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
 const FORMATTERS: Record<SectionType, (content: unknown) => string> = {
   purpose: (c) => formatPurpose(c as PurposeContent),
   vision: (c) => formatVision(c as VisionContent),
@@ -93,9 +140,9 @@ const FORMATTERS: Record<SectionType, (content: unknown) => string> = {
   values: (c) => formatValues(c as ValuesContent),
   audience_persona: (c) => formatAudiencePersona(c as AudiencePersonaContent),
   competitor_audit: (c) => JSON.stringify(c),
-  positioning_strategy: (c) => JSON.stringify(c),
-  brand_persona: (c) => JSON.stringify(c),
-  core_message: (c) => JSON.stringify(c),
+  positioning_strategy: (c) => formatPositioning(c as PositioningStrategyContent),
+  brand_persona: (c) => formatBrandPersona(c as BrandPersonaContent),
+  core_message: (c) => formatCoreMessage(c as CoreMessageContent),
   brand_story: (c) => JSON.stringify(c),
 };
 
