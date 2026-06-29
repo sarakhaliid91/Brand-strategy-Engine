@@ -2,7 +2,7 @@ import { and, eq, desc, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { sections, sectionVersions, projects, clients } from "@/lib/db/schema";
 import { SectionType } from "./types";
-import { SECTION_DEFINITIONS } from "./definitions";
+import { SECTION_DEFINITIONS, ORDERED_SECTION_TYPES } from "./definitions";
 
 export async function getProject(projectId: string) {
   const [project] = await db
@@ -61,6 +61,41 @@ export async function getApprovedContent(
   const result = await getSectionWithCurrentVersion(projectId, sectionType);
   if (!result || result.section.status !== "approved") return null;
   return result.currentVersion?.content ?? null;
+}
+
+/**
+ * All sections for a project in canonical order, each with its current
+ * content and status. Used by the review and print pages.
+ */
+export async function getProjectSectionsForReview(projectId: string) {
+  const rows = await db
+    .select()
+    .from(sections)
+    .where(eq(sections.projectId, projectId));
+  const byType = new Map(rows.map((r) => [r.sectionType as SectionType, r]));
+
+  const versionIds = rows
+    .map((r) => r.currentVersionId)
+    .filter((id): id is string => Boolean(id));
+  const versions = versionIds.length
+    ? await db
+        .select()
+        .from(sectionVersions)
+        .where(inArray(sectionVersions.id, versionIds))
+    : [];
+  const versionById = new Map(versions.map((v) => [v.id, v]));
+
+  return ORDERED_SECTION_TYPES.map((type) => {
+    const section = byType.get(type);
+    const version = section?.currentVersionId
+      ? versionById.get(section.currentVersionId)
+      : undefined;
+    return {
+      type,
+      status: section?.status ?? "not_started",
+      content: version?.content ?? null,
+    };
+  });
 }
 
 /** True only if every section in `requiredContext` is approved. */

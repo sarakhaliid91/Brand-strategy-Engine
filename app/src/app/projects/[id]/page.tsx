@@ -32,13 +32,21 @@ export default async function ProjectPage({
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <header className="border-b border-zinc-200 bg-white px-8 py-4">
-        <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-800">
-          &larr; Dashboard
+      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-8 py-4">
+        <div>
+          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-800">
+            &larr; Dashboard
+          </Link>
+          <h1 className="mt-1 text-lg font-semibold text-zinc-900">
+            {project.name}
+          </h1>
+        </div>
+        <Link
+          href={`/projects/${id}/review`}
+          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:border-zinc-400"
+        >
+          Review &amp; export
         </Link>
-        <h1 className="mt-1 text-lg font-semibold text-zinc-900">
-          {project.name}
-        </h1>
       </header>
 
       <main className="mx-auto max-w-2xl px-8 py-10">
