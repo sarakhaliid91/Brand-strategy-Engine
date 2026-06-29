@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { projects, sections } from "@/lib/db/schema";
@@ -32,9 +33,9 @@ export default async function ProjectPage({
   return (
     <div className="min-h-screen bg-zinc-50">
       <header className="border-b border-zinc-200 bg-white px-8 py-4">
-        <a href="/" className="text-sm text-zinc-500 hover:text-zinc-800">
+        <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-800">
           &larr; Dashboard
-        </a>
+        </Link>
         <h1 className="mt-1 text-lg font-semibold text-zinc-900">
           {project.name}
         </h1>
@@ -46,19 +47,21 @@ export default async function ProjectPage({
             const def = SECTION_DEFINITIONS[type];
             const status = statusByType.get(type) ?? "not_started";
             return (
-              <li
-                key={type}
-                className="flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-medium text-zinc-800">
-                    {def.order}. {def.displayName}
-                  </p>
-                  <p className="text-xs text-zinc-500">{def.summary}</p>
-                </div>
-                <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
-                  {status.replace("_", " ")}
-                </span>
+              <li key={type}>
+                <a
+                  href={`/projects/${id}/${type}`}
+                  className="flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3 hover:border-zinc-400"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-zinc-800">
+                      {def.order}. {def.displayName}
+                    </p>
+                    <p className="text-xs text-zinc-500">{def.summary}</p>
+                  </div>
+                  <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
+                    {status.replace("_", " ")}
+                  </span>
+                </a>
               </li>
             );
           })}
