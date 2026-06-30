@@ -1,11 +1,11 @@
 # Deploying the Brand Strategy Engine
 
 The app is a Next.js app living in the `app/` folder. It needs two things in
-production: a **Postgres database** and a **host**. Firebase **App Hosting** is a
-good host for it (it runs the Next.js server, API routes, and server actions).
+production: a **Postgres database** and a **host**. **Vercel** is a good host
+for it (it runs the Next.js server, API routes, and server actions) and its
+free **Hobby** plan needs no credit card.
 
-> Note: Firebase's own database (Firestore) is **not** used by this app — it uses
-> Postgres. The quickest free Postgres is **Neon**; you can also use GCP Cloud SQL.
+> The quickest free Postgres is **Neon** — also no credit card required.
 
 The whole thing is ~10 minutes. You do not need to write any code.
 
@@ -27,19 +27,20 @@ The whole thing is ~10 minutes. You do not need to write any code.
 Any random 32+ character string. On a Mac/Linux terminal: `openssl rand -base64 32`.
 Or just mash a long random string. Keep it private.
 
-## 3. Deploy on Firebase App Hosting
+## 3. Deploy on Vercel (free, no credit card)
 
-1. Go to the **Firebase console → App Hosting → Get started / Create backend**.
-2. Connect your GitHub and pick the repo **`sarakhaliid91/Brand-strategy-Engine`**.
-3. Set:
-   - **Live branch:** `claude/brand-strategy-engine-6wp26e` (or merge it to `main` first)
-   - **Root directory:** `app`   ← important, the app lives in this subfolder
-4. Add **environment variables / secrets**:
+1. Go to **https://vercel.com**, sign up with your GitHub account — no card needed.
+2. Click **Add New... → Project**, and import the repo
+   **`sarakhaliid91/Brand-strategy-Engine`**.
+3. In the import screen, set:
+   - **Root Directory:** `app`   ← important, the app lives in this subfolder
+   - **Framework Preset:** Next.js (Vercel detects this automatically)
+4. Open **Environment Variables** and add:
    - `DATABASE_URL` = your Neon connection string
    - `AUTH_SECRET` = the string from step 2
    - *(optional, anytime later)* `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
      `AI_DEFAULT_PROVIDER`
-5. Deploy. When it finishes, open the live URL and sign in.
+5. Click **Deploy**. When it finishes, open the live `*.vercel.app` URL and sign in.
 
 That's it — everything except the AI drafting works immediately. Add the AI keys
 whenever you want Claude/ChatGPT drafting and competitor research to turn on.
@@ -51,9 +52,9 @@ whenever you want Claude/ChatGPT drafting and competitor research to turn on.
 - **AI keys are optional for launch.** Without them, the manual sections, the
   wizard, the review screen, and navigation all work; the "Generate" buttons just
   show a friendly message until a key is added.
-- **PDF export** uses headless Chromium. On a serverless/container host it needs
-  the `@sparticuz/chromium` package wired into the export route — a small
-  follow-up. Everything else runs as-is. (It works fully when running locally.)
+- **PDF export** uses headless Chromium. On a serverless host it needs the
+  `@sparticuz/chromium` package wired into the export route — a small follow-up.
+  Everything else runs as-is. (It works fully when running locally.)
 - **`app/setup.sql`** is generated from the Drizzle schema
   (`app/src/lib/db/schema.ts`); regenerate with `npx drizzle-kit generate` if the
   schema changes.
