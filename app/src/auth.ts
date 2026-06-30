@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // Trust the deployment host header (required on Vercel/most hosts for v5).
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
