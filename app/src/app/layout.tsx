@@ -5,6 +5,7 @@ import {
   thmanyahSerifDisplay,
   thmanyahSerifText,
 } from "./fonts";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "Brand Strategy Engine",
@@ -12,14 +13,16 @@ export const metadata: Metadata = {
     "Run clients through your brand strategy framework and export a polished deliverable.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { locale, dir } = await getDict();
   return (
     <html
-      lang="en"
+      lang={locale}
+      dir={dir}
       className={`${thmanyahSans.variable} ${thmanyahSerifDisplay.variable} ${thmanyahSerifText.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { signOutAction } from "@/app/actions";
+import { signOutAction, setLanguageAction } from "@/app/actions";
+import { getDict } from "@/lib/i18n";
 
 /* Shared class recipes — one place to keep the Thmanyah look consistent. */
 export const ui = {
@@ -17,23 +18,22 @@ export const ui = {
   label: "text-xs font-semibold text-muted",
 } as const;
 
-const STATUS_META: Record<string, { label: string; cls: string }> = {
-  approved: { label: "Approved", cls: "bg-brand text-ink" },
-  in_review: { label: "In review", cls: "bg-mint text-brand-deep" },
-  draft: { label: "Draft", cls: "bg-ink/10 text-ink" },
-  not_started: {
-    label: "Not started",
-    cls: "border border-dashed border-line bg-transparent text-muted",
-  },
+const STATUS_CLS: Record<string, string> = {
+  approved: "bg-brand text-ink",
+  in_review: "bg-mint text-brand-deep",
+  draft: "bg-ink/10 text-ink",
+  not_started: "border border-dashed border-line bg-transparent text-muted",
 };
 
-export function StatusChip({ status }: { status: string }) {
-  const meta = STATUS_META[status] ?? STATUS_META.not_started;
+export async function StatusChip({ status }: { status: string }) {
+  const { t } = await getDict();
+  const cls = STATUS_CLS[status] ?? STATUS_CLS.not_started;
+  const label = t.status[status] ?? t.status.not_started;
   return (
     <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${meta.cls}`}
+      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${cls}`}
     >
-      {meta.label}
+      {label}
     </span>
   );
 }
@@ -67,6 +67,7 @@ export function ProgressBar({
 export function Wordmark({ inverted = false }: { inverted?: boolean }) {
   return (
     <span
+      dir="ltr"
       className={`font-display text-lg font-bold tracking-tight ${inverted ? "text-white" : "text-ink"}`}
     >
       Brand Strategy{" "}
@@ -75,8 +76,25 @@ export function Wordmark({ inverted = false }: { inverted?: boolean }) {
   );
 }
 
+async function LanguageToggle() {
+  const { locale } = await getDict();
+  const other = locale === "ar" ? "en" : "ar";
+  const label = locale === "ar" ? "English" : "العربية";
+  return (
+    <form action={setLanguageAction.bind(null, other)}>
+      <button
+        type="submit"
+        lang={other}
+        className="rounded-full border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white"
+      >
+        {label}
+      </button>
+    </form>
+  );
+}
+
 /** Black app-chrome header used on every screen. */
-export function AppHeader({
+export async function AppHeader({
   backHref,
   backLabel,
   children,
@@ -85,6 +103,7 @@ export function AppHeader({
   backLabel?: string;
   children?: React.ReactNode;
 }) {
+  const { t } = await getDict();
   return (
     <header className="bg-ink">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4 sm:px-8">
@@ -97,18 +116,19 @@ export function AppHeader({
               href={backHref}
               className="hidden truncate text-sm text-white/60 transition hover:text-white sm:block"
             >
-              ← {backLabel ?? "Back"}
+              {t.back} {backLabel ?? ""}
             </Link>
           )}
         </div>
         <div className="flex items-center gap-2">
           {children}
+          <LanguageToggle />
           <form action={signOutAction}>
             <button
               type="submit"
               className="rounded-full px-3 py-1.5 text-sm text-white/60 transition hover:bg-white/10 hover:text-white"
             >
-              Sign out
+              {t.signOut}
             </button>
           </form>
         </div>

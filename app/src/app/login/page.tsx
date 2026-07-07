@@ -1,6 +1,8 @@
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
+import { getDict } from "@/lib/i18n";
+import { setLanguageAction } from "@/app/actions";
 
 async function loginAction(formData: FormData) {
   "use server";
@@ -29,14 +31,30 @@ export default async function LoginPage({
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 }) {
   const { callbackUrl = "/", error } = await searchParams;
+  const { t, locale } = await getDict();
+  const otherLocale = locale === "ar" ? "en" : "ar";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-ink px-4 py-10">
       <div className="w-full max-w-md rounded-panel bg-brand p-8 sm:p-10">
-        <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-deep">
-          Strategy studio
-        </p>
-        <h1 className="mb-8 font-display text-4xl font-black leading-tight text-ink">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-deep">
+            {t.login.kicker}
+          </p>
+          <form action={setLanguageAction.bind(null, otherLocale)}>
+            <button
+              type="submit"
+              lang={otherLocale}
+              className="rounded-full border border-ink/20 px-3 py-1 text-xs font-bold text-brand-deep transition hover:bg-ink hover:text-white"
+            >
+              {locale === "ar" ? "English" : "العربية"}
+            </button>
+          </form>
+        </div>
+        <h1
+          dir="ltr"
+          className="mb-8 text-start font-display text-4xl font-black leading-tight text-ink"
+        >
           Brand Strategy
           <br />
           <span className="bse-mark">Engine</span>
@@ -44,7 +62,7 @@ export default async function LoginPage({
 
         {error && (
           <p className="mb-4 rounded-xl bg-coral px-4 py-3 text-sm font-semibold text-ink">
-            Invalid email or password.
+            {t.login.invalid}
           </p>
         )}
 
@@ -55,7 +73,7 @@ export default async function LoginPage({
               htmlFor="email"
               className="text-xs font-bold uppercase tracking-wide text-brand-deep"
             >
-              Email
+              {t.login.email}
             </label>
             <input
               id="email"
@@ -71,7 +89,7 @@ export default async function LoginPage({
               htmlFor="password"
               className="text-xs font-bold uppercase tracking-wide text-brand-deep"
             >
-              Password
+              {t.login.password}
             </label>
             <input
               id="password"
@@ -86,13 +104,11 @@ export default async function LoginPage({
             type="submit"
             className="mt-3 rounded-full bg-ink px-5 py-3.5 text-sm font-bold text-white transition hover:bg-black active:scale-[0.98]"
           >
-            Sign in
+            {t.login.signIn}
           </button>
         </form>
 
-        <p className="mt-6 text-xs text-brand-deep/80">
-          One studio, every brand you build.
-        </p>
+        <p className="mt-6 text-xs text-brand-deep/80">{t.login.tagline}</p>
       </div>
     </div>
   );

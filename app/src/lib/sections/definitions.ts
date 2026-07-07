@@ -18,6 +18,8 @@ export const SECTION_DEFINITIONS: Record<SectionType, SectionDefinition> = {
     requiredContext: [],
     summary:
       "Who we help, what we help them with, and the impact chain that leads to the brand purpose statement.",
+    summaryAr:
+      "من نساعد، وبماذا نساعدهم، وسلسلة الأثر التي تقود إلى عبارة هدف البراند.",
   },
   vision: {
     type: "vision",
@@ -28,6 +30,8 @@ export const SECTION_DEFINITIONS: Record<SectionType, SectionDefinition> = {
     requiredContext: ["purpose"],
     summary:
       "5-10 year impact aspirations across customers, achievements, industry, environment and world, composed into a vision statement.",
+    summaryAr:
+      "طموحات الأثر خلال 5-10 سنوات عبر العملاء والإنجازات والقطاع والبيئة والعالم، مصاغة في عبارة رؤية.",
   },
   mission: {
     type: "mission",
@@ -37,6 +41,8 @@ export const SECTION_DEFINITIONS: Record<SectionType, SectionDefinition> = {
     order: 3,
     requiredContext: ["purpose", "vision"],
     summary: "Ongoing commitments composed into a mission statement.",
+    summaryAr:
+      "الالتزامات المستمرة مصاغة في عبارة مهمة.",
   },
   values: {
     type: "values",
@@ -47,6 +53,8 @@ export const SECTION_DEFINITIONS: Record<SectionType, SectionDefinition> = {
     requiredContext: ["purpose", "vision", "mission"],
     summary:
       "Stakeholder perception notes refined into a values shortlist and core brand values with descriptions.",
+    summaryAr:
+      "ملاحظات إدراك أصحاب المصلحة مُنقّحة إلى قائمة مختصرة وقيم أساسية للبراند مع أوصافها.",
   },
   audience_persona: {
     type: "audience_persona",
@@ -57,6 +65,8 @@ export const SECTION_DEFINITIONS: Record<SectionType, SectionDefinition> = {
     requiredContext: ["purpose", "values"],
     summary:
       "Demographics, psychographics, personality, circumstances (challenges/desires/fears) and archetype mix for the target audience.",
+    summaryAr:
+      "الخصائص الديموغرافية والنفسية والشخصية والظروف (تحديات/رغبات/مخاوف) ومزيج الأنماط للجمهور المستهدف.",
   },
   competitor_audit: {
     type: "competitor_audit",
@@ -67,6 +77,8 @@ export const SECTION_DEFINITIONS: Record<SectionType, SectionDefinition> = {
     requiredContext: ["purpose"],
     summary:
       "Per-competitor research scored across positioning, message, personality, identity, presence and core offer.",
+    summaryAr:
+      "بحث لكل منافس يقيّم التموضع والرسالة والشخصية والهوية والحضور والعرض الأساسي.",
   },
   positioning_strategy: {
     type: "positioning_strategy",
@@ -84,6 +96,8 @@ export const SECTION_DEFINITIONS: Record<SectionType, SectionDefinition> = {
     ],
     summary:
       "Gaps & opportunities, differentiator shortlist, USP and a positioning statement.",
+    summaryAr:
+      "الفجوات والفرص، قائمة عوامل التميّز، عرض البيع الفريد، وعبارة تموضع.",
   },
   brand_persona: {
     type: "brand_persona",
@@ -94,6 +108,8 @@ export const SECTION_DEFINITIONS: Record<SectionType, SectionDefinition> = {
     requiredContext: ["audience_persona", "values", "positioning_strategy"],
     summary:
       "Brand archetype mix, personality/appearance/tone-of-voice, and brand interview answers.",
+    summaryAr:
+      "مزيج أنماط البراند، الشخصية والمظهر ونبرة الصوت، وإجابات مقابلة البراند.",
   },
   core_message: {
     type: "core_message",
@@ -112,6 +128,8 @@ export const SECTION_DEFINITIONS: Record<SectionType, SectionDefinition> = {
     ],
     summary:
       "StoryBrand-style message map: audience, pain points, key benefit, competitive alternative, differentiator.",
+    summaryAr:
+      "خارطة رسائل بأسلوب StoryBrand: الجمهور، نقاط الألم، الفائدة الأساسية، البديل التنافسي، عامل التميّز.",
   },
   brand_story: {
     type: "brand_story",
@@ -131,6 +149,8 @@ export const SECTION_DEFINITIONS: Record<SectionType, SectionDefinition> = {
     ],
     summary:
       "Seven-chapter hero's journey narrative: Existing World, Obstacle, Call to Action, Meeting the Guide, Challenge, Transformation, New World.",
+    summaryAr:
+      "سردية رحلة البطل بسبعة فصول: العالم القائم، العقبة، نداء التحرك، لقاء المرشد، التحدي، التحول، العالم الجديد.",
   },
 };
 

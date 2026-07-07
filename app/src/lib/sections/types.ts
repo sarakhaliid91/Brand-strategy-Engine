@@ -27,4 +27,15 @@ export interface SectionDefinition {
   requiredContext: SectionType[];
   /** Short description shown in the wizard stepper. */
   summary: string;
+  summaryAr: string;
+}
+
+/** Localized display name/summary for a section definition. */
+export function localizedSection(
+  def: SectionDefinition,
+  locale: "en" | "ar",
+): { name: string; summary: string } {
+  return locale === "ar"
+    ? { name: def.displayNameAr, summary: def.summaryAr }
+    : { name: def.displayName, summary: def.summary };
 }

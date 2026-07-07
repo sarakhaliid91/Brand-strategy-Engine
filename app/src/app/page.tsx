@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getClientsWithProjects } from "@/lib/db/queries";
 import { createClientAction, createProjectAction } from "@/app/actions";
 import { AppHeader, ProgressBar, ui } from "@/app/ui";
+import { getDict } from "@/lib/i18n";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -11,6 +12,7 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  const { t } = await getDict();
   const clients = await getClientsWithProjects(session.user.id);
 
   return (
@@ -21,21 +23,19 @@ export default async function DashboardPage() {
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-4xl font-black text-ink">
-              Clients
+              {t.dashboard.title}
             </h1>
-            <p className="mt-1 text-sm text-muted">
-              Every brand strategy starts here.
-            </p>
+            <p className="mt-1 text-sm text-muted">{t.dashboard.subtitle}</p>
           </div>
           <form action={createClientAction} className="flex gap-2">
             <input
               name="name"
-              placeholder="New client name"
+              placeholder={t.dashboard.newClientPlaceholder}
               required
               className={ui.input}
             />
             <button type="submit" className={ui.btnPrimary}>
-              Add client
+              {t.dashboard.addClient}
             </button>
           </form>
         </div>
@@ -43,11 +43,10 @@ export default async function DashboardPage() {
         {clients.length === 0 && (
           <div className="rounded-panel bg-mint-soft px-8 py-16 text-center">
             <p className="font-display text-2xl font-bold text-brand-deep">
-              No clients yet.
+              {t.dashboard.emptyTitle}
             </p>
             <p className="mt-2 text-sm text-brand-deep/70">
-              Add your first client above — then create a project and start
-              the framework.
+              {t.dashboard.emptyHint}
             </p>
           </div>
         )}
@@ -88,8 +87,11 @@ export default async function DashboardPage() {
                           className={`shrink-0 text-xs font-bold ${done ? "text-brand-deep" : "text-muted"}`}
                         >
                           {done
-                            ? "✓ Complete"
-                            : `${project.approvedCount}/${project.totalCount} approved`}
+                            ? t.dashboard.complete
+                            : t.dashboard.approvedOf(
+                                project.approvedCount,
+                                project.totalCount,
+                              )}
                         </span>
                       </Link>
                     </li>
@@ -97,7 +99,7 @@ export default async function DashboardPage() {
                 })}
                 {client.projects.length === 0 && (
                   <li className="rounded-card border border-dashed border-line px-5 py-4 text-sm text-muted">
-                    No projects yet — create the first one below.
+                    {t.dashboard.noProjects}
                   </li>
                 )}
               </ul>
@@ -106,16 +108,16 @@ export default async function DashboardPage() {
                 <input type="hidden" name="clientId" value={client.id} />
                 <input
                   name="name"
-                  placeholder="Project name"
+                  placeholder={t.dashboard.projectNamePlaceholder}
                   required
                   className={`${ui.input} min-w-40 flex-1`}
                 />
                 <select name="language" defaultValue="ar" className={ui.input}>
-                  <option value="ar">Arabic</option>
-                  <option value="en">English</option>
+                  <option value="ar">{t.dashboard.arabic}</option>
+                  <option value="en">{t.dashboard.english}</option>
                 </select>
                 <button type="submit" className={ui.btnSoft}>
-                  New project
+                  {t.dashboard.newProject}
                 </button>
               </form>
             </section>

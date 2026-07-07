@@ -8,9 +8,10 @@ import {
   SECTION_DEFINITIONS,
   ORDERED_SECTION_TYPES,
 } from "@/lib/sections/definitions";
-import { SectionType } from "@/lib/sections/types";
+import { SectionType, localizedSection } from "@/lib/sections/types";
 import { getProjectOwnedByUser } from "@/lib/sections/queries";
 import { AppHeader, ProgressBar, StatusChip, ui } from "@/app/ui";
+import { getDict } from "@/lib/i18n";
 
 export default async function ProjectPage({
   params,
@@ -24,6 +25,8 @@ export default async function ProjectPage({
 
   const project = await getProjectOwnedByUser(id, session.user.id);
   if (!project) notFound();
+
+  const { t, locale } = await getDict();
 
   const projectSections = await db
     .select()
@@ -39,9 +42,9 @@ export default async function ProjectPage({
 
   return (
     <div className="min-h-screen bg-paper">
-      <AppHeader backHref="/" backLabel="Dashboard">
+      <AppHeader backHref="/" backLabel={t.project.dashboard}>
         <Link href={`/projects/${id}/review`} className={ui.btnPrimary}>
-          Review &amp; export
+          {t.project.reviewExport}
         </Link>
       </AppHeader>
 
@@ -57,7 +60,10 @@ export default async function ProjectPage({
               className="max-w-xs"
             />
             <span className="text-xs font-bold text-muted">
-              {approvedCount}/{ORDERED_SECTION_TYPES.length} approved
+              {t.dashboard.approvedOf(
+                approvedCount,
+                ORDERED_SECTION_TYPES.length,
+              )}
             </span>
           </div>
         </div>
@@ -65,6 +71,7 @@ export default async function ProjectPage({
         <ol className="flex flex-col gap-2.5">
           {ORDERED_SECTION_TYPES.map((type) => {
             const def = SECTION_DEFINITIONS[type];
+            const loc = localizedSection(def, locale);
             const status = statusByType.get(type) ?? "not_started";
             return (
               <li key={type}>
@@ -76,10 +83,8 @@ export default async function ProjectPage({
                     {def.order}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-ink">
-                      {def.displayName}
-                    </p>
-                    <p className="truncate text-xs text-muted">{def.summary}</p>
+                    <p className="text-sm font-bold text-ink">{loc.name}</p>
+                    <p className="truncate text-xs text-muted">{loc.summary}</p>
                   </div>
                   <StatusChip status={status} />
                 </Link>

@@ -12,7 +12,11 @@ import {
   getRecentAIVersions,
   getCompetitorEntries,
 } from "@/lib/sections/queries";
-import { SECTION_TYPES, SectionType } from "@/lib/sections/types";
+import {
+  SECTION_TYPES,
+  SectionType,
+  localizedSection,
+} from "@/lib/sections/types";
 import {
   SECTION_DEFINITIONS,
   ORDERED_SECTION_TYPES,
@@ -54,6 +58,10 @@ import {
   BRAND_INTERVIEW_QUESTIONS,
 } from "@/lib/sections/content-types";
 import { AppHeader, StatusChip, ui } from "@/app/ui";
+import { getDict } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n/dict";
+
+type Fields = Dict["fields"];
 
 function isSectionType(value: string): value is SectionType {
   return (SECTION_TYPES as readonly string[]).includes(value);
@@ -64,11 +72,13 @@ function Field({
   name,
   defaultValue,
   multiline = false,
+  placeholder,
 }: {
   label: string;
   name: string;
   defaultValue?: string;
   multiline?: boolean;
+  placeholder?: string;
 }) {
   return (
     <label className="flex flex-col gap-1.5">
@@ -78,7 +88,7 @@ function Field({
           name={name}
           defaultValue={defaultValue}
           rows={3}
-          placeholder="One per line"
+          placeholder={placeholder}
           className={ui.input}
         />
       ) : (
@@ -105,134 +115,153 @@ function FieldGroup({
   );
 }
 
-function PurposeForm({ content }: { content: PurposeContent }) {
+function PurposeForm({ content, f, ph }: { content: PurposeContent; f: Fields; ph: string }) {
   return (
     <>
-      <Field label="Who are we helping?" name="whoWeHelp" defaultValue={content.whoWeHelp.join("\n")} multiline />
-      <Field label="What are we helping them with?" name="whatWeHelpThemWith" defaultValue={content.whatWeHelpThemWith.join("\n")} multiline />
-      <Field label="Desired emotion" name="desiredEmotion" defaultValue={content.desiredEmotion.join("\n")} multiline />
-      <Field label="How that emotion impacts their lives" name="emotionImpact" defaultValue={content.emotionImpact.join("\n")} multiline />
-      <Field label="Knock-on effect elsewhere in their lives" name="knockOnEffect" defaultValue={content.knockOnEffect.join("\n")} multiline />
-      <Field label="Practical impact of that knock-on effect" name="practicalImpact" defaultValue={content.practicalImpact.join("\n")} multiline />
-      <Field label="Biggest impact we can have" name="biggestImpact" defaultValue={content.biggestImpact} />
+      <Field label={f.whoWeHelp} name="whoWeHelp" defaultValue={content.whoWeHelp.join("\n")} multiline placeholder={ph} />
+      <Field label={f.whatWeHelpThemWith} name="whatWeHelpThemWith" defaultValue={content.whatWeHelpThemWith.join("\n")} multiline placeholder={ph} />
+      <Field label={f.desiredEmotion} name="desiredEmotion" defaultValue={content.desiredEmotion.join("\n")} multiline placeholder={ph} />
+      <Field label={f.emotionImpact} name="emotionImpact" defaultValue={content.emotionImpact.join("\n")} multiline placeholder={ph} />
+      <Field label={f.knockOnEffect} name="knockOnEffect" defaultValue={content.knockOnEffect.join("\n")} multiline placeholder={ph} />
+      <Field label={f.practicalImpact} name="practicalImpact" defaultValue={content.practicalImpact.join("\n")} multiline placeholder={ph} />
+      <Field label={f.biggestImpact} name="biggestImpact" defaultValue={content.biggestImpact} />
     </>
   );
 }
 
-function VisionForm({ content }: { content: VisionContent }) {
+function VisionForm({ content, f, ph }: { content: VisionContent; f: Fields; ph: string }) {
   return (
     <>
-      <Field label="Customers (5-10yr aspiration)" name="customers" defaultValue={content.customers.join("\n")} multiline />
-      <Field label="Achievements" name="achievements" defaultValue={content.achievements.join("\n")} multiline />
-      <Field label="Industry" name="industry" defaultValue={content.industry.join("\n")} multiline />
-      <Field label="Environment" name="environment" defaultValue={content.environment.join("\n")} multiline />
-      <Field label="World" name="world" defaultValue={content.world.join("\n")} multiline />
+      <Field label={f.customers} name="customers" defaultValue={content.customers.join("\n")} multiline placeholder={ph} />
+      <Field label={f.achievements} name="achievements" defaultValue={content.achievements.join("\n")} multiline placeholder={ph} />
+      <Field label={f.industry} name="industry" defaultValue={content.industry.join("\n")} multiline placeholder={ph} />
+      <Field label={f.environment} name="environment" defaultValue={content.environment.join("\n")} multiline placeholder={ph} />
+      <Field label={f.world} name="world" defaultValue={content.world.join("\n")} multiline placeholder={ph} />
     </>
   );
 }
 
-function MissionForm({ content }: { content: MissionContent }) {
+function MissionForm({ content, f, ph }: { content: MissionContent; f: Fields; ph: string }) {
   return (
-    <Field label="Ongoing commitments" name="ongoingCommitments" defaultValue={content.ongoingCommitments.join("\n")} multiline />
+    <Field label={f.ongoingCommitments} name="ongoingCommitments" defaultValue={content.ongoingCommitments.join("\n")} multiline placeholder={ph} />
   );
 }
 
-function ValuesForm({ content }: { content: ValuesContent }) {
+function ValuesForm({ content, f, ph }: { content: ValuesContent; f: Fields; ph: string }) {
   const byGroup = (group: string) =>
     content.groupPerceptions.find((g) => g.group === group);
+  const groupLabels: Record<string, string> = {
+    customers: f.group_customers,
+    suppliers: f.group_suppliers,
+    general_public: f.group_general_public,
+  };
   return (
     <>
       {["customers", "suppliers", "general_public"].map((group) => (
-        <FieldGroup key={group} legend={group.replace("_", " ")}>
+        <FieldGroup key={group} legend={groupLabels[group]}>
           <div className="flex flex-col gap-2">
             <Field
-              label="What would they say about the brand?"
+              label={f.groupComments}
               name={`group_${group}_comments`}
               defaultValue={byGroup(group)?.comments.join("\n")}
               multiline
+              placeholder={ph}
             />
             <Field
-              label="Related values"
+              label={f.groupRelatedValues}
               name={`group_${group}_relatedValues`}
               defaultValue={byGroup(group)?.relatedValues.join("\n")}
               multiline
+              placeholder={ph}
             />
           </div>
         </FieldGroup>
       ))}
-      <Field label="Values shortlist" name="shortlist" defaultValue={content.shortlist.join("\n")} multiline />
+      <Field label={f.shortlist} name="shortlist" defaultValue={content.shortlist.join("\n")} multiline placeholder={ph} />
       <Field
-        label="Core value names (one per line, matches sentences below by order)"
+        label={f.coreValueNames}
         name="coreValueNames"
         defaultValue={content.coreValues.map((v) => v.value).join("\n")}
         multiline
+        placeholder={ph}
       />
       <Field
-        label="Core value action sentences (same order)"
+        label={f.coreValueSentences}
         name="coreValueSentences"
         defaultValue={content.coreValues.map((v) => v.actionSentence).join("\n")}
         multiline
+        placeholder={ph}
       />
     </>
   );
 }
 
-function AudiencePersonaForm({ content }: { content: AudiencePersonaContent }) {
+function AudiencePersonaForm({
+  content,
+  f,
+  ph,
+  archetypes,
+}: {
+  content: AudiencePersonaContent;
+  f: Fields;
+  ph: string;
+  archetypes: Record<string, string>;
+}) {
   return (
     <>
-      <Field label="Persona name" name="personaName" defaultValue={content.personaName} />
-      <FieldGroup legend="Demographics">
+      <Field label={f.personaName} name="personaName" defaultValue={content.personaName} />
+      <FieldGroup legend={f.demographics}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Field label="Age" name="age" defaultValue={content.demographics.age} />
-          <Field label="Gender" name="gender" defaultValue={content.demographics.gender} />
-          <Field label="Occupation" name="occupation" defaultValue={content.demographics.occupation} />
-          <Field label="Professional responsibilities" name="professionalResponsibilities" defaultValue={content.demographics.professionalResponsibilities} />
-          <Field label="Education" name="education" defaultValue={content.demographics.education} />
-          <Field label="Location" name="location" defaultValue={content.demographics.location} />
-          <Field label="Personal income" name="personalIncome" defaultValue={content.demographics.personalIncome} />
-          <Field label="Household income" name="householdIncome" defaultValue={content.demographics.householdIncome} />
-          <Field label="Marital status" name="maritalStatus" defaultValue={content.demographics.maritalStatus} />
-          <Field label="Family status" name="familyStatus" defaultValue={content.demographics.familyStatus} />
-          <Field label="Homeowner status" name="homeownerStatus" defaultValue={content.demographics.homeownerStatus} />
+          <Field label={f.age} name="age" defaultValue={content.demographics.age} />
+          <Field label={f.gender} name="gender" defaultValue={content.demographics.gender} />
+          <Field label={f.occupation} name="occupation" defaultValue={content.demographics.occupation} />
+          <Field label={f.professionalResponsibilities} name="professionalResponsibilities" defaultValue={content.demographics.professionalResponsibilities} />
+          <Field label={f.education} name="education" defaultValue={content.demographics.education} />
+          <Field label={f.location} name="location" defaultValue={content.demographics.location} />
+          <Field label={f.personalIncome} name="personalIncome" defaultValue={content.demographics.personalIncome} />
+          <Field label={f.householdIncome} name="householdIncome" defaultValue={content.demographics.householdIncome} />
+          <Field label={f.maritalStatus} name="maritalStatus" defaultValue={content.demographics.maritalStatus} />
+          <Field label={f.familyStatus} name="familyStatus" defaultValue={content.demographics.familyStatus} />
+          <Field label={f.homeownerStatus} name="homeownerStatus" defaultValue={content.demographics.homeownerStatus} />
         </div>
       </FieldGroup>
-      <FieldGroup legend="Psychographics">
+      <FieldGroup legend={f.psychographics}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Field label="Hobbies / interests" name="hobbiesInterests" defaultValue={content.psychographics.hobbiesInterests} />
-          <Field label="Sports" name="sports" defaultValue={content.psychographics.sports} />
-          <Field label="Music" name="music" defaultValue={content.psychographics.music} />
-          <Field label="Restaurant preference" name="restaurantPreference" defaultValue={content.psychographics.restaurantPreference} />
-          <Field label="Weekend pleasures" name="weekendPleasures" defaultValue={content.psychographics.weekendPleasures} />
-          <Field label="Entertainment / fun" name="entertainment" defaultValue={content.psychographics.entertainment} />
-          <Field label="Likes to wear" name="likesToWear" defaultValue={content.psychographics.likesToWear} />
-          <Field label="Likes to talk about" name="likesToTalkAbout" defaultValue={content.psychographics.likesToTalkAbout} />
-          <Field label="Groups & forums" name="groupsAndForums" defaultValue={content.psychographics.groupsAndForums} />
-          <Field label="Favourite apps" name="favouriteApps" defaultValue={content.psychographics.favouriteApps} />
+          <Field label={f.hobbiesInterests} name="hobbiesInterests" defaultValue={content.psychographics.hobbiesInterests} />
+          <Field label={f.sports} name="sports" defaultValue={content.psychographics.sports} />
+          <Field label={f.music} name="music" defaultValue={content.psychographics.music} />
+          <Field label={f.restaurantPreference} name="restaurantPreference" defaultValue={content.psychographics.restaurantPreference} />
+          <Field label={f.weekendPleasures} name="weekendPleasures" defaultValue={content.psychographics.weekendPleasures} />
+          <Field label={f.entertainment} name="entertainment" defaultValue={content.psychographics.entertainment} />
+          <Field label={f.likesToWear} name="likesToWear" defaultValue={content.psychographics.likesToWear} />
+          <Field label={f.likesToTalkAbout} name="likesToTalkAbout" defaultValue={content.psychographics.likesToTalkAbout} />
+          <Field label={f.groupsAndForums} name="groupsAndForums" defaultValue={content.psychographics.groupsAndForums} />
+          <Field label={f.favouriteApps} name="favouriteApps" defaultValue={content.psychographics.favouriteApps} />
         </div>
       </FieldGroup>
-      <FieldGroup legend="Personality">
+      <FieldGroup legend={f.personality}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Field label="Behavioural characteristics" name="behaviouralCharacteristics" defaultValue={content.personality.behaviouralCharacteristics} />
-          <Field label="Most passionate about" name="mostPassionateAbout" defaultValue={content.personality.mostPassionateAbout} />
-          <Field label="Obligations they hate" name="obligationsTheyHate" defaultValue={content.personality.obligationsTheyHate} />
-          <Field label="Biggest personal goal" name="biggestPersonalGoal" defaultValue={content.personality.biggestPersonalGoal} />
-          <Field label="Biggest professional goal" name="biggestProfessionalGoal" defaultValue={content.personality.biggestProfessionalGoal} />
-          <Field label="Core values" name="personalityCoreValues" defaultValue={content.personality.coreValues} />
-          <Field label="Core fears" name="coreFears" defaultValue={content.personality.coreFears} />
-          <Field label="Core desire" name="coreDesire" defaultValue={content.personality.coreDesire} />
+          <Field label={f.behaviouralCharacteristics} name="behaviouralCharacteristics" defaultValue={content.personality.behaviouralCharacteristics} />
+          <Field label={f.mostPassionateAbout} name="mostPassionateAbout" defaultValue={content.personality.mostPassionateAbout} />
+          <Field label={f.obligationsTheyHate} name="obligationsTheyHate" defaultValue={content.personality.obligationsTheyHate} />
+          <Field label={f.biggestPersonalGoal} name="biggestPersonalGoal" defaultValue={content.personality.biggestPersonalGoal} />
+          <Field label={f.biggestProfessionalGoal} name="biggestProfessionalGoal" defaultValue={content.personality.biggestProfessionalGoal} />
+          <Field label={f.personalityCoreValues} name="personalityCoreValues" defaultValue={content.personality.coreValues} />
+          <Field label={f.coreFears} name="coreFears" defaultValue={content.personality.coreFears} />
+          <Field label={f.coreDesire} name="coreDesire" defaultValue={content.personality.coreDesire} />
         </div>
       </FieldGroup>
-      <Field label="Challenges & pain points" name="challenges" defaultValue={content.circumstances.challenges.join("\n")} multiline />
-      <Field label="Desires" name="desires" defaultValue={content.circumstances.desires.join("\n")} multiline />
-      <Field label="Fears" name="fears" defaultValue={content.circumstances.fears.join("\n")} multiline />
-      <FieldGroup legend="Archetype mix (0 - 1 weight per archetype)">
+      <Field label={f.challenges} name="challenges" defaultValue={content.circumstances.challenges.join("\n")} multiline placeholder={ph} />
+      <Field label={f.desires} name="desires" defaultValue={content.circumstances.desires.join("\n")} multiline placeholder={ph} />
+      <Field label={f.fears} name="fears" defaultValue={content.circumstances.fears.join("\n")} multiline placeholder={ph} />
+      <FieldGroup legend={f.archetypeMix}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {BRAND_ARCHETYPES.map((archetype) => {
             const existing = content.archetypeMix.find((a) => a.archetype === archetype);
             return (
               <Field
                 key={archetype}
-                label={archetype}
+                label={archetypes[archetype] ?? archetype}
                 name={`archetype_${archetype}`}
                 defaultValue={String(existing?.weight ?? 0)}
               />
@@ -246,52 +275,68 @@ function AudiencePersonaForm({ content }: { content: AudiencePersonaContent }) {
 
 function PositioningStrategyForm({
   content,
+  f,
+  ph,
 }: {
   content: PositioningStrategyContent;
+  f: Fields;
+  ph: string;
 }) {
   return (
     <>
-      <Field label="Unmet needs" name="unmetNeeds" defaultValue={content.unmetNeeds.join("\n")} multiline />
-      <Field label="Opportunities" name="opportunities" defaultValue={content.opportunities.join("\n")} multiline />
-      <Field label="Ideas" name="ideas" defaultValue={content.ideas.join("\n")} multiline />
-      <FieldGroup legend="Differentiator shortlist (one per line, aligned by row)">
+      <Field label={f.unmetNeeds} name="unmetNeeds" defaultValue={content.unmetNeeds.join("\n")} multiline placeholder={ph} />
+      <Field label={f.opportunities} name="opportunities" defaultValue={content.opportunities.join("\n")} multiline placeholder={ph} />
+      <Field label={f.ideas} name="ideas" defaultValue={content.ideas.join("\n")} multiline placeholder={ph} />
+      <FieldGroup legend={f.differentiators}>
         <div className="flex flex-col gap-2">
-          <Field label="Ideas" name="differentiatorIdeas" defaultValue={content.differentiators.map((d) => d.idea).join("\n")} multiline />
-          <Field label="Added value" name="differentiatorAddedValues" defaultValue={content.differentiators.map((d) => d.addedValue).join("\n")} multiline />
-          <Field label="Enhances experience" name="differentiatorEnhances" defaultValue={content.differentiators.map((d) => d.enhancesExperience).join("\n")} multiline />
-          <Field label="Rating" name="differentiatorRatings" defaultValue={content.differentiators.map((d) => d.rating).join("\n")} multiline />
+          <Field label={f.ideas} name="differentiatorIdeas" defaultValue={content.differentiators.map((d) => d.idea).join("\n")} multiline placeholder={ph} />
+          <Field label={f.differentiatorAddedValues} name="differentiatorAddedValues" defaultValue={content.differentiators.map((d) => d.addedValue).join("\n")} multiline placeholder={ph} />
+          <Field label={f.differentiatorEnhances} name="differentiatorEnhances" defaultValue={content.differentiators.map((d) => d.enhancesExperience).join("\n")} multiline placeholder={ph} />
+          <Field label={f.differentiatorRatings} name="differentiatorRatings" defaultValue={content.differentiators.map((d) => d.rating).join("\n")} multiline placeholder={ph} />
         </div>
       </FieldGroup>
-      <FieldGroup legend="USP inputs">
+      <FieldGroup legend={f.uspInputs}>
         <div className="flex flex-col gap-2">
-          <Field label="End result delivered" name="uspEndResult" defaultValue={content.uspEndResult} />
-          <Field label="Benefit of the difference" name="uspBenefit" defaultValue={content.uspBenefit} />
+          <Field label={f.uspEndResult} name="uspEndResult" defaultValue={content.uspEndResult} />
+          <Field label={f.uspBenefit} name="uspBenefit" defaultValue={content.uspBenefit} />
         </div>
       </FieldGroup>
-      <FieldGroup legend="Positioning statement inputs">
+      <FieldGroup legend={f.posInputs}>
         <div className="flex flex-col gap-2">
-          <Field label="We help…" name="posWeHelp" defaultValue={content.posWeHelp} />
-          <Field label="Who…" name="posWho" defaultValue={content.posWho} />
-          <Field label="To achieve / experience…" name="posToAchieve" defaultValue={content.posToAchieve} />
-          <Field label="Unlike (the ordinary alternative)…" name="posUnlike" defaultValue={content.posUnlike} />
-          <Field label="Our solution…" name="posOurSolution" defaultValue={content.posOurSolution} />
+          <Field label={f.posWeHelp} name="posWeHelp" defaultValue={content.posWeHelp} />
+          <Field label={f.posWho} name="posWho" defaultValue={content.posWho} />
+          <Field label={f.posToAchieve} name="posToAchieve" defaultValue={content.posToAchieve} />
+          <Field label={f.posUnlike} name="posUnlike" defaultValue={content.posUnlike} />
+          <Field label={f.posOurSolution} name="posOurSolution" defaultValue={content.posOurSolution} />
         </div>
       </FieldGroup>
     </>
   );
 }
 
-function BrandPersonaForm({ content }: { content: BrandPersonaContent }) {
+function BrandPersonaForm({
+  content,
+  f,
+  ph,
+  archetypes,
+  interview,
+}: {
+  content: BrandPersonaContent;
+  f: Fields;
+  ph: string;
+  archetypes: Record<string, string>;
+  interview: Record<string, string>;
+}) {
   return (
     <>
-      <FieldGroup legend="Brand archetype mix / role (0 - 1 weight per archetype)">
+      <FieldGroup legend={f.archetypeRoleMix}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {BRAND_ARCHETYPES.map((archetype) => {
             const existing = content.archetypeRoleMix.find((a) => a.archetype === archetype);
             return (
               <Field
                 key={archetype}
-                label={archetype}
+                label={archetypes[archetype] ?? archetype}
                 name={`role_${archetype}`}
                 defaultValue={String(existing?.weight ?? 0)}
               />
@@ -299,33 +344,34 @@ function BrandPersonaForm({ content }: { content: BrandPersonaContent }) {
           })}
         </div>
       </FieldGroup>
-      <FieldGroup legend="Personality">
+      <FieldGroup legend={f.personaPersonality}>
         <div className="flex flex-col gap-2">
-          <Field label="Characteristics" name="personalityCharacteristics" defaultValue={content.personalityCharacteristics} />
-          <Field label="Desires" name="personalityDesires" defaultValue={content.personalityDesires} />
-          <Field label="Fears" name="personalityFears" defaultValue={content.personalityFears} />
+          <Field label={f.personalityCharacteristics} name="personalityCharacteristics" defaultValue={content.personalityCharacteristics} />
+          <Field label={f.personalityDesires} name="personalityDesires" defaultValue={content.personalityDesires} />
+          <Field label={f.personalityFears} name="personalityFears" defaultValue={content.personalityFears} />
         </div>
       </FieldGroup>
-      <FieldGroup legend="Appearance">
+      <FieldGroup legend={f.appearance}>
         <div className="flex flex-col gap-2">
-          <Field label="Characteristics" name="appearanceCharacteristics" defaultValue={content.appearanceCharacteristics} />
-          <Field label="Dress / style / clothes" name="dressStyle" defaultValue={content.dressStyle} />
-          <Field label="Accessories" name="accessories" defaultValue={content.accessories} />
+          <Field label={f.appearanceCharacteristics} name="appearanceCharacteristics" defaultValue={content.appearanceCharacteristics} />
+          <Field label={f.dressStyle} name="dressStyle" defaultValue={content.dressStyle} />
+          <Field label={f.accessories} name="accessories" defaultValue={content.accessories} />
         </div>
       </FieldGroup>
-      <Field label="Tone of voice" name="toneOfVoice" defaultValue={content.toneOfVoice} multiline />
-      <Field label="Language keywords / phrases" name="languageKeywords" defaultValue={content.languageKeywords} multiline />
-      <FieldGroup legend="Brand interview">
+      <Field label={f.toneOfVoice} name="toneOfVoice" defaultValue={content.toneOfVoice} multiline placeholder={ph} />
+      <Field label={f.languageKeywords} name="languageKeywords" defaultValue={content.languageKeywords} multiline placeholder={ph} />
+      <FieldGroup legend={f.brandInterview}>
         <div className="flex flex-col gap-2">
           {BRAND_INTERVIEW_QUESTIONS.map((question, i) => {
             const existing = content.interview.find((q) => q.question === question);
             return (
               <Field
                 key={i}
-                label={question}
+                label={interview[question] ?? question}
                 name={`interview_${i}`}
                 defaultValue={existing?.answer ?? ""}
                 multiline
+                placeholder={ph}
               />
             );
           })}
@@ -335,26 +381,28 @@ function BrandPersonaForm({ content }: { content: BrandPersonaContent }) {
   );
 }
 
-function CoreMessageForm({ content }: { content: CoreMessageContent }) {
+function CoreMessageForm({ content, f, ph }: { content: CoreMessageContent; f: Fields; ph: string }) {
   return (
     <Field
-      label="Optional guidance for the AI (tone, emphasis, anything to steer the message map)"
+      label={f.guidance}
       name="guidance"
       defaultValue={content.guidance}
       multiline
+      placeholder={ph}
     />
   );
 }
 
-function BrandStoryForm({ content }: { content: BrandStoryContent }) {
+function BrandStoryForm({ content, f, ph }: { content: BrandStoryContent; f: Fields; ph: string }) {
   return (
     <>
-      <Field label="Hero's name (optional — the AI will invent one if blank)" name="characterName" defaultValue={content.characterName} />
+      <Field label={f.characterName} name="characterName" defaultValue={content.characterName} />
       <Field
-        label="Optional guidance for the AI (tone, emphasis, anything to steer the story)"
+        label={f.storyGuidance}
         name="guidance"
         defaultValue={content.guidance}
         multiline
+        placeholder={ph}
       />
     </>
   );
@@ -371,10 +419,12 @@ function CompetitorAuditPanel({
   projectId,
   entries,
   hasAnyResearch,
+  s,
 }: {
   projectId: string;
   entries: CompetitorEntry[];
   hasAnyResearch: boolean;
+  s: Dict["section"];
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -384,23 +434,23 @@ function CompetitorAuditPanel({
       >
         <input
           name="name"
-          placeholder="Competitor name"
+          placeholder={s.competitorName}
           required
           className={`${ui.input} min-w-40 flex-1`}
         />
         <input
           name="url"
-          placeholder="Website / social URL (optional)"
+          placeholder={s.competitorUrl}
           className={`${ui.input} min-w-40 flex-1`}
         />
         <button type="submit" className={ui.btnPrimary}>
-          Add competitor
+          {s.addCompetitor}
         </button>
       </form>
 
       {entries.length === 0 ? (
         <div className="rounded-card bg-mint-soft px-6 py-8 text-center text-sm font-semibold text-brand-deep">
-          Add competitors above, then research each one with live web search.
+          {s.competitorsEmpty}
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -414,7 +464,9 @@ function CompetitorAuditPanel({
                       {entry.competitorName}
                     </p>
                     {entry.competitorUrl && (
-                      <p className="text-xs text-muted">{entry.competitorUrl}</p>
+                      <p className="text-xs text-muted" dir="ltr">
+                        {entry.competitorUrl}
+                      </p>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -422,7 +474,7 @@ function CompetitorAuditPanel({
                       action={researchCompetitorAction.bind(null, projectId, entry.id)}
                     >
                       <button type="submit" className={ui.btnSoft}>
-                        {result ? "Re-research" : "Research (web)"}
+                        {result ? s.reResearch : s.research}
                       </button>
                     </form>
                     <form
@@ -432,7 +484,7 @@ function CompetitorAuditPanel({
                         type="submit"
                         className="rounded-full px-3 py-2 text-xs font-semibold text-muted transition hover:bg-coral-soft hover:text-ink"
                       >
-                        Remove
+                        {s.remove}
                       </button>
                     </form>
                   </div>
@@ -442,31 +494,31 @@ function CompetitorAuditPanel({
                   <div className="mt-3 flex flex-col gap-1.5 border-t border-line pt-3 text-xs text-ink/80">
                     {result.positioning && (
                       <p>
-                        <span className="font-bold text-brand-deep">Positioning:</span>{" "}
+                        <span className="font-bold text-brand-deep">{s.positioning}:</span>{" "}
                         {result.positioning}
                       </p>
                     )}
                     {result.strengths?.length > 0 && (
                       <p>
-                        <span className="font-bold text-brand-deep">Strengths:</span>{" "}
+                        <span className="font-bold text-brand-deep">{s.strengths}:</span>{" "}
                         {result.strengths.join("; ")}
                       </p>
                     )}
                     {result.weaknesses?.length > 0 && (
                       <p>
-                        <span className="font-bold text-brand-deep">Weaknesses:</span>{" "}
+                        <span className="font-bold text-brand-deep">{s.weaknesses}:</span>{" "}
                         {result.weaknesses.join("; ")}
                       </p>
                     )}
                     {result.toneDescriptors?.length > 0 && (
                       <p>
-                        <span className="font-bold text-brand-deep">Tone:</span>{" "}
+                        <span className="font-bold text-brand-deep">{s.tone}:</span>{" "}
                         {result.toneDescriptors.join(", ")}
                       </p>
                     )}
                     {result.sources?.length > 0 && (
-                      <p className="text-muted">
-                        Sources: {result.sources.join(", ")}
+                      <p className="text-muted" dir="ltr">
+                        {s.sources}: {result.sources.join(", ")}
                       </p>
                     )}
                   </div>
@@ -481,10 +533,10 @@ function CompetitorAuditPanel({
         <button
           type="submit"
           disabled={!hasAnyResearch}
-          title={hasAnyResearch ? undefined : "Research at least one competitor first"}
+          title={hasAnyResearch ? undefined : s.researchFirst}
           className={ui.btnDark}
         >
-          Synthesize comparison
+          {s.synthesize}
         </button>
       </form>
     </div>
@@ -495,16 +547,19 @@ function SectionStepper({
   projectId,
   currentType,
   statusByType,
+  locale,
 }: {
   projectId: string;
   currentType: SectionType;
   statusByType: Map<SectionType, string>;
+  locale: "en" | "ar";
 }) {
   return (
     <nav aria-label="Sections" className="lg:sticky lg:top-6">
       <ol className="flex gap-1.5 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
         {ORDERED_SECTION_TYPES.map((type) => {
           const def = SECTION_DEFINITIONS[type];
+          const loc = localizedSection(def, locale);
           const status = statusByType.get(type) ?? "not_started";
           const isCurrent = type === currentType;
           const dot =
@@ -518,7 +573,7 @@ function SectionStepper({
               <Link
                 href={`/projects/${projectId}/${type}`}
                 aria-current={isCurrent ? "step" : undefined}
-                className={`flex items-center gap-2.5 rounded-full py-2 pl-3 pr-4 text-xs font-semibold transition lg:rounded-xl ${
+                className={`flex items-center gap-2.5 rounded-full px-4 py-2 text-xs font-semibold transition lg:rounded-xl ${
                   isCurrent
                     ? "bg-ink text-white"
                     : "text-muted hover:bg-ink/5 hover:text-ink"
@@ -526,7 +581,7 @@ function SectionStepper({
               >
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
                 <span className="whitespace-nowrap">
-                  {def.order}. {def.displayName}
+                  {def.order}. {loc.name}
                 </span>
               </Link>
             </li>
@@ -551,7 +606,13 @@ export default async function SectionWizardPage({
   const project = await getProjectOwnedByUser(projectId, session.user.id);
   if (!project) notFound();
 
+  const { t, locale } = await getDict();
+  const s = t.section;
+  const f = t.fields;
+  const ph = s.onePerLine;
+
   const def = SECTION_DEFINITIONS[type];
+  const loc = localizedSection(def, locale);
   const result = await getSectionWithCurrentVersion(projectId, type);
   if (!result) notFound();
   const { section, currentVersion } = result;
@@ -568,28 +629,33 @@ export default async function SectionWizardPage({
   const missing = def.requiredContext.filter(
     (rc) => rc !== type && statusByType.get(rc) !== "approved",
   );
-  const missingNames = missing.map((m) => SECTION_DEFINITIONS[m].displayName);
+  const missingNames = missing
+    .map((m) => localizedSection(SECTION_DEFINITIONS[m], locale).name)
+    .join(locale === "ar" ? "، " : ", ");
 
   const rawContent = currentVersion?.content as unknown;
 
   let formBody: React.ReactNode;
   switch (type) {
     case "purpose":
-      formBody = <PurposeForm content={(rawContent as PurposeContent) ?? emptyPurposeContent()} />;
+      formBody = <PurposeForm content={(rawContent as PurposeContent) ?? emptyPurposeContent()} f={f} ph={ph} />;
       break;
     case "vision":
-      formBody = <VisionForm content={(rawContent as VisionContent) ?? emptyVisionContent()} />;
+      formBody = <VisionForm content={(rawContent as VisionContent) ?? emptyVisionContent()} f={f} ph={ph} />;
       break;
     case "mission":
-      formBody = <MissionForm content={(rawContent as MissionContent) ?? emptyMissionContent()} />;
+      formBody = <MissionForm content={(rawContent as MissionContent) ?? emptyMissionContent()} f={f} ph={ph} />;
       break;
     case "values":
-      formBody = <ValuesForm content={(rawContent as ValuesContent) ?? emptyValuesContent()} />;
+      formBody = <ValuesForm content={(rawContent as ValuesContent) ?? emptyValuesContent()} f={f} ph={ph} />;
       break;
     case "audience_persona":
       formBody = (
         <AudiencePersonaForm
           content={(rawContent as AudiencePersonaContent) ?? emptyAudiencePersonaContent()}
+          f={f}
+          ph={ph}
+          archetypes={t.archetypes}
         />
       );
       break;
@@ -597,6 +663,8 @@ export default async function SectionWizardPage({
       formBody = (
         <PositioningStrategyForm
           content={(rawContent as PositioningStrategyContent) ?? emptyPositioningStrategyContent()}
+          f={f}
+          ph={ph}
         />
       );
       break;
@@ -604,6 +672,10 @@ export default async function SectionWizardPage({
       formBody = (
         <BrandPersonaForm
           content={(rawContent as BrandPersonaContent) ?? emptyBrandPersonaContent()}
+          f={f}
+          ph={ph}
+          archetypes={t.archetypes}
+          interview={t.interview}
         />
       );
       break;
@@ -611,6 +683,8 @@ export default async function SectionWizardPage({
       formBody = (
         <CoreMessageForm
           content={(rawContent as CoreMessageContent) ?? emptyCoreMessageContent()}
+          f={f}
+          ph={ph}
         />
       );
       break;
@@ -618,6 +692,8 @@ export default async function SectionWizardPage({
       formBody = (
         <BrandStoryForm
           content={(rawContent as BrandStoryContent) ?? emptyBrandStoryContent()}
+          f={f}
+          ph={ph}
         />
       );
       break;
@@ -644,7 +720,7 @@ export default async function SectionWizardPage({
     ? await getRecentAIVersions(projectId, type, 4)
     : [];
 
-  const isRtl = project.language === "ar";
+  const contentDir = project.language === "ar" ? "rtl" : "ltr";
 
   function metaLabel(meta: unknown): string {
     if (meta && typeof meta === "object" && "provider" in meta) {
@@ -668,7 +744,7 @@ export default async function SectionWizardPage({
           href={`/projects/${projectId}/review`}
           className="rounded-full px-3 py-1.5 text-sm text-white/60 transition hover:bg-white/10 hover:text-white"
         >
-          Review &amp; export
+          {t.project.reviewExport}
         </Link>
       </AppHeader>
 
@@ -678,6 +754,7 @@ export default async function SectionWizardPage({
             projectId={projectId}
             currentType={type}
             statusByType={statusByType}
+            locale={locale}
           />
         </aside>
 
@@ -685,14 +762,14 @@ export default async function SectionWizardPage({
           <div className="mb-6">
             <div className="mb-2 flex flex-wrap items-center gap-3">
               <h1 className="font-display text-3xl font-black text-ink">
-                {def.displayName}
+                {loc.name}
               </h1>
               <StatusChip status={section.status} />
             </div>
-            <p className="text-sm text-muted">{def.summary}</p>
-            {isAISection && !unlocked && missingNames.length > 0 && (
+            <p className="text-sm text-muted">{loc.summary}</p>
+            {isAISection && !unlocked && missing.length > 0 && (
               <p className="mt-3 inline-block rounded-xl bg-coral-soft px-3.5 py-2 text-xs font-semibold text-ink">
-                🔒 Drafting unlocks after you approve: {missingNames.join(", ")}
+                {s.lockedBanner(missingNames)}
               </p>
             )}
           </div>
@@ -705,7 +782,7 @@ export default async function SectionWizardPage({
               {formBody}
               <div className="mt-2 flex gap-2">
                 <button type="submit" className={ui.btnDark}>
-                  Save notes
+                  {s.saveNotes}
                 </button>
               </div>
             </form>
@@ -715,15 +792,16 @@ export default async function SectionWizardPage({
                 projectId={projectId}
                 entries={competitorEntries}
                 hasAnyResearch={hasAnyResearch}
+                s={s}
               />
               {statement && (
                 <div className={`${ui.card} mt-4 p-6`}>
                   <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-deep">
-                    Synthesized comparison
+                    {s.synthesized}
                   </p>
                   <p
-                    dir={isRtl ? "rtl" : "ltr"}
-                    className="whitespace-pre-wrap font-serif text-[15px] leading-relaxed text-ink"
+                    dir={contentDir}
+                    className="whitespace-pre-wrap text-start font-serif text-[15px] leading-relaxed text-ink"
                   >
                     {statement}
                   </p>
@@ -732,7 +810,7 @@ export default async function SectionWizardPage({
             </>
           ) : (
             <div className={`${ui.card} p-6 text-sm text-muted`}>
-              This section&apos;s editor is coming in a later phase.
+              {s.comingLater}
             </div>
           )}
 
@@ -740,11 +818,11 @@ export default async function SectionWizardPage({
             <div className="mt-5 overflow-hidden rounded-panel bg-ink">
               <div className="flex flex-wrap items-center justify-between gap-3 px-6 pb-4 pt-5">
                 <h2 className="font-display text-lg font-bold text-white">
-                  AI draft
+                  {s.aiDraft}
                 </h2>
                 {availableProviders.length === 0 ? (
                   <span className="rounded-full bg-coral px-3 py-1.5 text-xs font-bold text-ink">
-                    No AI key configured yet — add one in Vercel settings
+                    {s.noKey}
                   </span>
                 ) : (
                   <div className="flex flex-wrap gap-2">
@@ -763,15 +841,17 @@ export default async function SectionWizardPage({
                           disabled={!unlocked || !currentVersion}
                           title={
                             !currentVersion
-                              ? "Save your raw notes first"
+                              ? s.saveNotesFirst
                               : !unlocked
-                                ? `Approve first: ${missingNames.join(", ")}`
+                                ? s.approveFirst(missingNames)
                                 : undefined
                           }
                           className="inline-flex items-center rounded-full bg-brand px-4 py-2 text-xs font-bold text-ink transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                         >
-                          {statement ? "Regenerate" : "Generate"} with{" "}
-                          {PROVIDER_LABELS[provider]}
+                          {s.withProvider(
+                            statement ? s.regenerate : s.generate,
+                            PROVIDER_LABELS[provider],
+                          )}
                         </button>
                       </form>
                     ))}
@@ -783,18 +863,18 @@ export default async function SectionWizardPage({
                 {currentVersion && statement ? (
                   <div>
                     <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-deep">
-                      Current draft · {metaLabel(currentVersion.generationMetadata)}
+                      {s.currentDraft} · {metaLabel(currentVersion.generationMetadata)}
                     </p>
                     <p
-                      dir={isRtl ? "rtl" : "ltr"}
-                      className="whitespace-pre-wrap font-serif text-[15px] leading-relaxed text-ink"
+                      dir={contentDir}
+                      className="whitespace-pre-wrap text-start font-serif text-[15px] leading-relaxed text-ink"
                     >
                       {statement}
                     </p>
 
                     <details className="mt-4 border-t border-line pt-3">
                       <summary className="cursor-pointer text-xs font-semibold text-muted transition hover:text-ink">
-                        Edit this draft by hand
+                        {s.editByHand}
                       </summary>
                       <form
                         action={editStatementAction.bind(null, projectId, type)}
@@ -804,12 +884,12 @@ export default async function SectionWizardPage({
                           name="statement"
                           defaultValue={statement}
                           rows={8}
-                          dir={isRtl ? "rtl" : "ltr"}
+                          dir={contentDir}
                           className={`${ui.input} font-serif leading-relaxed`}
                         />
                         <div>
                           <button type="submit" className={ui.btnSoft}>
-                            Save edited draft
+                            {s.saveEditedDraft}
                           </button>
                         </div>
                       </form>
@@ -817,17 +897,15 @@ export default async function SectionWizardPage({
                   </div>
                 ) : (
                   <p className="text-sm text-muted">
-                    No draft yet.{" "}
-                    {currentVersion
-                      ? "Generate one with the buttons above — it will be written from your approved sections."
-                      : "Save your notes first, then generate."}
+                    {s.noDraftYet}{" "}
+                    {currentVersion ? s.noDraftGenerate : s.noDraftSave}
                   </p>
                 )}
 
                 {recentAIVersions.length > 1 && (
                   <div className="mt-5 border-t border-line pt-4">
                     <p className="mb-2.5 text-xs font-bold uppercase tracking-wide text-muted">
-                      Recent AI drafts — compare &amp; pick
+                      {s.recentDrafts}
                     </p>
                     <ul className="flex flex-col gap-2">
                       {recentAIVersions.map((version) => {
@@ -844,7 +922,7 @@ export default async function SectionWizardPage({
                               </span>
                               {isCurrent ? (
                                 <span className="rounded-full bg-brand px-2.5 py-0.5 text-[10px] font-bold text-ink">
-                                  Current
+                                  {s.current}
                                 </span>
                               ) : (
                                 <form
@@ -859,14 +937,14 @@ export default async function SectionWizardPage({
                                     type="submit"
                                     className="rounded-full bg-ink/5 px-2.5 py-1 text-[10px] font-bold text-ink transition hover:bg-mint"
                                   >
-                                    Make current
+                                    {s.makeCurrent}
                                   </button>
                                 </form>
                               )}
                             </div>
                             <p
-                              dir={isRtl ? "rtl" : "ltr"}
-                              className="line-clamp-3 whitespace-pre-wrap text-xs leading-relaxed text-muted"
+                              dir={contentDir}
+                              className="line-clamp-3 whitespace-pre-wrap text-start text-xs leading-relaxed text-muted"
                             >
                               {draftStatement(version.content)}
                             </p>
@@ -886,11 +964,9 @@ export default async function SectionWizardPage({
               className="mt-5"
             >
               <button type="submit" className={`${ui.btnPrimary} px-7 py-3`}>
-                ✓ Approve section
+                {s.approve}
               </button>
-              <p className="mt-2 text-xs text-muted">
-                Approving locks this in as context for the next sections.
-              </p>
+              <p className="mt-2 text-xs text-muted">{s.approveHint}</p>
             </form>
           )}
         </main>

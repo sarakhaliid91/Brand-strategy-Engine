@@ -1,5 +1,5 @@
 import { SECTION_DEFINITIONS } from "@/lib/sections/definitions";
-import { SectionType } from "@/lib/sections/types";
+import { SectionType, localizedSection } from "@/lib/sections/types";
 import { sectionViewModel, ViewBlock } from "@/lib/sections/view-model";
 import { printFontFaceCss } from "./fonts";
 
@@ -138,12 +138,13 @@ export function buildPrintHtml(args: {
   const sectionsHtml = sections
     .map(({ type, content }) => {
       const def = SECTION_DEFINITIONS[type];
+      const loc = localizedSection(def, language);
       const body = sectionViewModel(type, content).map(blockToHtml).join("");
       return `<section class="bse-section">
         <h2 class="bse-section-title"><span class="bse-section-order">${def.order}. </span>${esc(
-          def.displayName,
+          loc.name,
         )}</h2>
-        <p class="bse-section-summary">${esc(def.summary)}</p>
+        <p class="bse-section-summary">${esc(loc.summary)}</p>
         ${body}
       </section>`;
     })
@@ -155,7 +156,7 @@ export function buildPrintHtml(args: {
 <body>
   <div class="bse-cover">
     <div class="bse-cover-card">
-      <p class="bse-cover-kicker">Brand Strategy</p>
+      <p class="bse-cover-kicker">${language === "ar" ? "استراتيجية البراند" : "Brand Strategy"}</p>
       <h1 class="bse-cover-title"><span class="bse-hl">${esc(projectName)}</span></h1>
       <p class="bse-cover-client">${esc(clientName)}</p>
       <p class="bse-cover-foot">${esc(date)}</p>

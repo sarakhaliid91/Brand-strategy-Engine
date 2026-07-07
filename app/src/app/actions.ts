@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { auth, signOut } from "@/auth";
 import { createClient, createProject } from "@/lib/db/queries";
+import { LOCALE_COOKIE } from "@/lib/i18n";
 
 async function requireUserId() {
   const session = await auth();
@@ -36,4 +38,13 @@ export async function createProjectAction(formData: FormData) {
 
 export async function signOutAction() {
   await signOut({ redirectTo: "/login" });
+}
+
+export async function setLanguageAction(locale: string) {
+  const store = await cookies();
+  store.set(LOCALE_COOKIE, locale === "ar" ? "ar" : "en", {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  revalidatePath("/", "layout");
 }
