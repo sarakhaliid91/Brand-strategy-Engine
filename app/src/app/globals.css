@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
+/*
+ * Thmanyah-derived design system.
+ * Palette sampled from the brand guide: vivid green, mint highlight,
+ * deep-green ink, near-black, warm paper, coral accent.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand: #00bb65;
+  --brand-deep: #004223;
+  --mint: #9ce2ae;
+  --mint-soft: #e3f6e9;
+  --ink: #0d0d0d;
+  --paper: #f6f4ee;
+  --card: #ffffff;
+  --muted: #6b6b66;
+  --line: #e4e1d8;
+  --coral: #ff815e;
+  --coral-soft: #ffe9e2;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-coral: var(--coral);
+  --color-coral-soft: var(--coral-soft);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-thmanyah-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-thmanyah-display), ui-serif, Georgia, serif;
+  --font-serif: var(--font-thmanyah-serif), ui-serif, Georgia, serif;
+
+  --radius-card: 1.25rem;
+  --radius-panel: 1.75rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-thmanyah-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Guide motif: mint highlight band behind display words. */
+.bse-mark {
+  background: var(--mint);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0.05em 0.18em;
 }

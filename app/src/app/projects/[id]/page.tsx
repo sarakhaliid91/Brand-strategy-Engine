@@ -1,10 +1,16 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { projects, sections } from "@/lib/db/schema";
-import { SECTION_DEFINITIONS, ORDERED_SECTION_TYPES } from "@/lib/sections/definitions";
+import { sections } from "@/lib/db/schema";
+import {
+  SECTION_DEFINITIONS,
+  ORDERED_SECTION_TYPES,
+} from "@/lib/sections/definitions";
 import { SectionType } from "@/lib/sections/types";
+import { getProjectOwnedByUser } from "@/lib/sections/queries";
+import { AppHeader, ProgressBar, StatusChip, ui } from "@/app/ui";
 
 export default async function ProjectPage({
   params,
@@ -13,12 +19,10 @@ export default async function ProjectPage({
 }) {
   const { id } = await params;
 
-  const [project] = await db
-    .select()
-    .from(projects)
-    .where(eq(projects.id, id))
-    .limit(1);
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
 
+  const project = await getProjectOwnedByUser(id, session.user.id);
   if (!project) notFound();
 
   const projectSections = await db
@@ -29,47 +33,56 @@ export default async function ProjectPage({
   const statusByType = new Map(
     projectSections.map((s) => [s.sectionType as SectionType, s.status]),
   );
+  const approvedCount = ORDERED_SECTION_TYPES.filter(
+    (t) => statusByType.get(t) === "approved",
+  ).length;
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-8 py-4">
-        <div>
-          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-800">
-            &larr; Dashboard
-          </Link>
-          <h1 className="mt-1 text-lg font-semibold text-zinc-900">
-            {project.name}
-          </h1>
-        </div>
-        <Link
-          href={`/projects/${id}/review`}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:border-zinc-400"
-        >
+    <div className="min-h-screen bg-paper">
+      <AppHeader backHref="/" backLabel="Dashboard">
+        <Link href={`/projects/${id}/review`} className={ui.btnPrimary}>
           Review &amp; export
         </Link>
-      </header>
+      </AppHeader>
 
-      <main className="mx-auto max-w-2xl px-8 py-10">
-        <ol className="flex flex-col gap-2">
+      <main className="mx-auto max-w-2xl px-6 py-10 sm:px-8">
+        <div className="mb-8">
+          <h1 className="font-display text-4xl font-black text-ink">
+            {project.name}
+          </h1>
+          <div className="mt-4 flex items-center gap-3">
+            <ProgressBar
+              value={approvedCount}
+              total={ORDERED_SECTION_TYPES.length}
+              className="max-w-xs"
+            />
+            <span className="text-xs font-bold text-muted">
+              {approvedCount}/{ORDERED_SECTION_TYPES.length} approved
+            </span>
+          </div>
+        </div>
+
+        <ol className="flex flex-col gap-2.5">
           {ORDERED_SECTION_TYPES.map((type) => {
             const def = SECTION_DEFINITIONS[type];
             const status = statusByType.get(type) ?? "not_started";
             return (
               <li key={type}>
-                <a
+                <Link
                   href={`/projects/${id}/${type}`}
-                  className="flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3 hover:border-zinc-400"
+                  className="flex items-center gap-4 rounded-card border border-line bg-card px-5 py-4 transition hover:border-brand hover:bg-mint-soft/40"
                 >
-                  <div>
-                    <p className="text-sm font-medium text-zinc-800">
-                      {def.order}. {def.displayName}
-                    </p>
-                    <p className="text-xs text-zinc-500">{def.summary}</p>
-                  </div>
-                  <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
-                    {status.replace("_", " ")}
+                  <span className="w-8 shrink-0 font-display text-2xl font-black text-brand">
+                    {def.order}
                   </span>
-                </a>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-ink">
+                      {def.displayName}
+                    </p>
+                    <p className="truncate text-xs text-muted">{def.summary}</p>
+                  </div>
+                  <StatusChip status={status} />
+                </Link>
               </li>
             );
           })}

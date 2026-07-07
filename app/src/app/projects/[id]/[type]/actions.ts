@@ -105,6 +105,35 @@ export async function saveSectionAction(
   revalidatePath(`/projects/${projectId}`);
 }
 
+/**
+ * Saves a hand-edited version of the drafted statement, keeping the rest of
+ * the section's structured content intact.
+ */
+export async function editStatementAction(
+  projectId: string,
+  sectionTypeRaw: string,
+  formData: FormData,
+) {
+  await requireOwnedProject(projectId);
+  if (!isSectionType(sectionTypeRaw)) throw new Error("Invalid section type");
+
+  const statement = String(formData.get("statement") ?? "").trim();
+  const existing = await getSectionWithCurrentVersion(projectId, sectionTypeRaw);
+  const prev = (existing?.currentVersion?.content ?? {}) as Record<
+    string,
+    unknown
+  >;
+
+  await saveDraftContent(
+    projectId,
+    sectionTypeRaw,
+    { ...prev, statement },
+    "manual_edit_after_ai",
+  );
+  revalidatePath(`/projects/${projectId}/${sectionTypeRaw}`);
+  revalidatePath(`/projects/${projectId}`);
+}
+
 export async function approveSectionAction(
   projectId: string,
   sectionTypeRaw: string,

@@ -52,10 +52,18 @@ export async function GET(
     sections: sections.map((s) => ({ type: s.type, content: s.content })),
   });
 
-  const executablePath = resolveChromiumExecutable();
+  // Local/dev: use the environment's Playwright Chromium. Serverless
+  // (Vercel): fall back to @sparticuz/chromium's bundled binary.
+  let executablePath = resolveChromiumExecutable();
+  let launchArgs = ["--no-sandbox"];
+  if (!executablePath) {
+    const serverlessChromium = (await import("@sparticuz/chromium")).default;
+    executablePath = await serverlessChromium.executablePath();
+    launchArgs = serverlessChromium.args;
+  }
   const browser = await chromium.launch({
     executablePath,
-    args: ["--no-sandbox"],
+    args: launchArgs,
   });
   try {
     const page = await browser.newPage();

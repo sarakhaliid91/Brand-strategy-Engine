@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { sections as sectionsTable } from "@/lib/db/schema";
 import {
   getProjectOwnedByUser,
   getSectionWithCurrentVersion,
@@ -9,7 +13,10 @@ import {
   getCompetitorEntries,
 } from "@/lib/sections/queries";
 import { SECTION_TYPES, SectionType } from "@/lib/sections/types";
-import { SECTION_DEFINITIONS } from "@/lib/sections/definitions";
+import {
+  SECTION_DEFINITIONS,
+  ORDERED_SECTION_TYPES,
+} from "@/lib/sections/definitions";
 import { getAvailableProviders } from "@/lib/ai/client";
 import { AIProvider, PROVIDER_LABELS } from "@/lib/ai/providers/types";
 import {
@@ -17,6 +24,7 @@ import {
   approveSectionAction,
   generateSectionAction,
   selectVersionAction,
+  editStatementAction,
   addCompetitorAction,
   researchCompetitorAction,
   deleteCompetitorAction,
@@ -45,6 +53,7 @@ import {
   BRAND_ARCHETYPES,
   BRAND_INTERVIEW_QUESTIONS,
 } from "@/lib/sections/content-types";
+import { AppHeader, StatusChip, ui } from "@/app/ui";
 
 function isSectionType(value: string): value is SectionType {
   return (SECTION_TYPES as readonly string[]).includes(value);
@@ -62,24 +71,37 @@ function Field({
   multiline?: boolean;
 }) {
   return (
-    <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-zinc-600">{label}</span>
+    <label className="flex flex-col gap-1.5">
+      <span className={ui.label}>{label}</span>
       {multiline ? (
         <textarea
           name={name}
           defaultValue={defaultValue}
           rows={3}
           placeholder="One per line"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          className={ui.input}
         />
       ) : (
-        <input
-          name={name}
-          defaultValue={defaultValue}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
-        />
+        <input name={name} defaultValue={defaultValue} className={ui.input} />
       )}
     </label>
+  );
+}
+
+function FieldGroup({
+  legend,
+  children,
+}: {
+  legend: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <fieldset className="rounded-card border border-line bg-paper/50 p-4">
+      <legend className="px-1.5 text-xs font-bold text-brand-deep">
+        {legend}
+      </legend>
+      {children}
+    </fieldset>
   );
 }
 
@@ -121,10 +143,7 @@ function ValuesForm({ content }: { content: ValuesContent }) {
   return (
     <>
       {["customers", "suppliers", "general_public"].map((group) => (
-        <fieldset key={group} className="rounded-md border border-zinc-200 p-3">
-          <legend className="px-1 text-xs font-medium text-zinc-600 capitalize">
-            {group.replace("_", " ")}
-          </legend>
+        <FieldGroup key={group} legend={group.replace("_", " ")}>
           <div className="flex flex-col gap-2">
             <Field
               label="What would they say about the brand?"
@@ -139,7 +158,7 @@ function ValuesForm({ content }: { content: ValuesContent }) {
               multiline
             />
           </div>
-        </fieldset>
+        </FieldGroup>
       ))}
       <Field label="Values shortlist" name="shortlist" defaultValue={content.shortlist.join("\n")} multiline />
       <Field
@@ -162,9 +181,8 @@ function AudiencePersonaForm({ content }: { content: AudiencePersonaContent }) {
   return (
     <>
       <Field label="Persona name" name="personaName" defaultValue={content.personaName} />
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">Demographics</legend>
-        <div className="grid grid-cols-2 gap-2">
+      <FieldGroup legend="Demographics">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Field label="Age" name="age" defaultValue={content.demographics.age} />
           <Field label="Gender" name="gender" defaultValue={content.demographics.gender} />
           <Field label="Occupation" name="occupation" defaultValue={content.demographics.occupation} />
@@ -177,10 +195,9 @@ function AudiencePersonaForm({ content }: { content: AudiencePersonaContent }) {
           <Field label="Family status" name="familyStatus" defaultValue={content.demographics.familyStatus} />
           <Field label="Homeowner status" name="homeownerStatus" defaultValue={content.demographics.homeownerStatus} />
         </div>
-      </fieldset>
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">Psychographics</legend>
-        <div className="grid grid-cols-2 gap-2">
+      </FieldGroup>
+      <FieldGroup legend="Psychographics">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Field label="Hobbies / interests" name="hobbiesInterests" defaultValue={content.psychographics.hobbiesInterests} />
           <Field label="Sports" name="sports" defaultValue={content.psychographics.sports} />
           <Field label="Music" name="music" defaultValue={content.psychographics.music} />
@@ -192,10 +209,9 @@ function AudiencePersonaForm({ content }: { content: AudiencePersonaContent }) {
           <Field label="Groups & forums" name="groupsAndForums" defaultValue={content.psychographics.groupsAndForums} />
           <Field label="Favourite apps" name="favouriteApps" defaultValue={content.psychographics.favouriteApps} />
         </div>
-      </fieldset>
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">Personality</legend>
-        <div className="grid grid-cols-2 gap-2">
+      </FieldGroup>
+      <FieldGroup legend="Personality">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Field label="Behavioural characteristics" name="behaviouralCharacteristics" defaultValue={content.personality.behaviouralCharacteristics} />
           <Field label="Most passionate about" name="mostPassionateAbout" defaultValue={content.personality.mostPassionateAbout} />
           <Field label="Obligations they hate" name="obligationsTheyHate" defaultValue={content.personality.obligationsTheyHate} />
@@ -205,15 +221,12 @@ function AudiencePersonaForm({ content }: { content: AudiencePersonaContent }) {
           <Field label="Core fears" name="coreFears" defaultValue={content.personality.coreFears} />
           <Field label="Core desire" name="coreDesire" defaultValue={content.personality.coreDesire} />
         </div>
-      </fieldset>
+      </FieldGroup>
       <Field label="Challenges & pain points" name="challenges" defaultValue={content.circumstances.challenges.join("\n")} multiline />
       <Field label="Desires" name="desires" defaultValue={content.circumstances.desires.join("\n")} multiline />
       <Field label="Fears" name="fears" defaultValue={content.circumstances.fears.join("\n")} multiline />
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">
-          Archetype mix (0 - 1 weight per archetype)
-        </legend>
-        <div className="grid grid-cols-3 gap-2">
+      <FieldGroup legend="Archetype mix (0 - 1 weight per archetype)">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {BRAND_ARCHETYPES.map((archetype) => {
             const existing = content.archetypeMix.find((a) => a.archetype === archetype);
             return (
@@ -226,7 +239,7 @@ function AudiencePersonaForm({ content }: { content: AudiencePersonaContent }) {
             );
           })}
         </div>
-      </fieldset>
+      </FieldGroup>
     </>
   );
 }
@@ -241,28 +254,21 @@ function PositioningStrategyForm({
       <Field label="Unmet needs" name="unmetNeeds" defaultValue={content.unmetNeeds.join("\n")} multiline />
       <Field label="Opportunities" name="opportunities" defaultValue={content.opportunities.join("\n")} multiline />
       <Field label="Ideas" name="ideas" defaultValue={content.ideas.join("\n")} multiline />
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">
-          Differentiator shortlist (one per line, aligned by row)
-        </legend>
+      <FieldGroup legend="Differentiator shortlist (one per line, aligned by row)">
         <div className="flex flex-col gap-2">
           <Field label="Ideas" name="differentiatorIdeas" defaultValue={content.differentiators.map((d) => d.idea).join("\n")} multiline />
           <Field label="Added value" name="differentiatorAddedValues" defaultValue={content.differentiators.map((d) => d.addedValue).join("\n")} multiline />
           <Field label="Enhances experience" name="differentiatorEnhances" defaultValue={content.differentiators.map((d) => d.enhancesExperience).join("\n")} multiline />
           <Field label="Rating" name="differentiatorRatings" defaultValue={content.differentiators.map((d) => d.rating).join("\n")} multiline />
         </div>
-      </fieldset>
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">USP inputs</legend>
+      </FieldGroup>
+      <FieldGroup legend="USP inputs">
         <div className="flex flex-col gap-2">
           <Field label="End result delivered" name="uspEndResult" defaultValue={content.uspEndResult} />
           <Field label="Benefit of the difference" name="uspBenefit" defaultValue={content.uspBenefit} />
         </div>
-      </fieldset>
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">
-          Positioning statement inputs
-        </legend>
+      </FieldGroup>
+      <FieldGroup legend="Positioning statement inputs">
         <div className="flex flex-col gap-2">
           <Field label="We help…" name="posWeHelp" defaultValue={content.posWeHelp} />
           <Field label="Who…" name="posWho" defaultValue={content.posWho} />
@@ -270,7 +276,7 @@ function PositioningStrategyForm({
           <Field label="Unlike (the ordinary alternative)…" name="posUnlike" defaultValue={content.posUnlike} />
           <Field label="Our solution…" name="posOurSolution" defaultValue={content.posOurSolution} />
         </div>
-      </fieldset>
+      </FieldGroup>
     </>
   );
 }
@@ -278,11 +284,8 @@ function PositioningStrategyForm({
 function BrandPersonaForm({ content }: { content: BrandPersonaContent }) {
   return (
     <>
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">
-          Brand archetype mix / role (0 - 1 weight per archetype)
-        </legend>
-        <div className="grid grid-cols-3 gap-2">
+      <FieldGroup legend="Brand archetype mix / role (0 - 1 weight per archetype)">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {BRAND_ARCHETYPES.map((archetype) => {
             const existing = content.archetypeRoleMix.find((a) => a.archetype === archetype);
             return (
@@ -295,27 +298,24 @@ function BrandPersonaForm({ content }: { content: BrandPersonaContent }) {
             );
           })}
         </div>
-      </fieldset>
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">Personality</legend>
+      </FieldGroup>
+      <FieldGroup legend="Personality">
         <div className="flex flex-col gap-2">
           <Field label="Characteristics" name="personalityCharacteristics" defaultValue={content.personalityCharacteristics} />
           <Field label="Desires" name="personalityDesires" defaultValue={content.personalityDesires} />
           <Field label="Fears" name="personalityFears" defaultValue={content.personalityFears} />
         </div>
-      </fieldset>
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">Appearance</legend>
+      </FieldGroup>
+      <FieldGroup legend="Appearance">
         <div className="flex flex-col gap-2">
           <Field label="Characteristics" name="appearanceCharacteristics" defaultValue={content.appearanceCharacteristics} />
           <Field label="Dress / style / clothes" name="dressStyle" defaultValue={content.dressStyle} />
           <Field label="Accessories" name="accessories" defaultValue={content.accessories} />
         </div>
-      </fieldset>
+      </FieldGroup>
       <Field label="Tone of voice" name="toneOfVoice" defaultValue={content.toneOfVoice} multiline />
       <Field label="Language keywords / phrases" name="languageKeywords" defaultValue={content.languageKeywords} multiline />
-      <fieldset className="rounded-md border border-zinc-200 p-3">
-        <legend className="px-1 text-xs font-medium text-zinc-600">Brand interview</legend>
+      <FieldGroup legend="Brand interview">
         <div className="flex flex-col gap-2">
           {BRAND_INTERVIEW_QUESTIONS.map((question, i) => {
             const existing = content.interview.find((q) => q.question === question);
@@ -330,7 +330,7 @@ function BrandPersonaForm({ content }: { content: BrandPersonaContent }) {
             );
           })}
         </div>
-      </fieldset>
+      </FieldGroup>
     </>
   );
 }
@@ -380,57 +380,48 @@ function CompetitorAuditPanel({
     <div className="flex flex-col gap-4">
       <form
         action={addCompetitorAction.bind(null, projectId)}
-        className="flex flex-wrap gap-2 rounded-xl border border-zinc-200 bg-white p-4"
+        className={`${ui.card} flex flex-wrap gap-2 p-4`}
       >
         <input
           name="name"
           placeholder="Competitor name"
           required
-          className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          className={`${ui.input} min-w-40 flex-1`}
         />
         <input
           name="url"
           placeholder="Website / social URL (optional)"
-          className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          className={`${ui.input} min-w-40 flex-1`}
         />
-        <button
-          type="submit"
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-        >
+        <button type="submit" className={ui.btnPrimary}>
           Add competitor
         </button>
       </form>
 
       {entries.length === 0 ? (
-        <p className="text-sm text-zinc-400">
-          Add competitors above, then research each with live web search.
-        </p>
+        <div className="rounded-card bg-mint-soft px-6 py-8 text-center text-sm font-semibold text-brand-deep">
+          Add competitors above, then research each one with live web search.
+        </div>
       ) : (
         <ul className="flex flex-col gap-3">
           {entries.map((entry) => {
             const result = entry.researchResult as CompetitorResearchResult | null;
             return (
-              <li
-                key={entry.id}
-                className="rounded-xl border border-zinc-200 bg-white p-4"
-              >
+              <li key={entry.id} className={`${ui.card} p-5`}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium text-zinc-800">
+                    <p className="text-sm font-bold text-ink">
                       {entry.competitorName}
                     </p>
                     {entry.competitorUrl && (
-                      <p className="text-xs text-zinc-400">{entry.competitorUrl}</p>
+                      <p className="text-xs text-muted">{entry.competitorUrl}</p>
                     )}
                   </div>
                   <div className="flex gap-2">
                     <form
                       action={researchCompetitorAction.bind(null, projectId, entry.id)}
                     >
-                      <button
-                        type="submit"
-                        className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-200"
-                      >
+                      <button type="submit" className={ui.btnSoft}>
                         {result ? "Re-research" : "Research (web)"}
                       </button>
                     </form>
@@ -439,7 +430,7 @@ function CompetitorAuditPanel({
                     >
                       <button
                         type="submit"
-                        className="rounded-md px-2 py-1.5 text-xs text-zinc-400 hover:text-red-600"
+                        className="rounded-full px-3 py-2 text-xs font-semibold text-muted transition hover:bg-coral-soft hover:text-ink"
                       >
                         Remove
                       </button>
@@ -448,33 +439,33 @@ function CompetitorAuditPanel({
                 </div>
 
                 {result && (
-                  <div className="mt-3 flex flex-col gap-1 border-t border-zinc-100 pt-3 text-xs text-zinc-600">
+                  <div className="mt-3 flex flex-col gap-1.5 border-t border-line pt-3 text-xs text-ink/80">
                     {result.positioning && (
                       <p>
-                        <span className="font-medium text-zinc-700">Positioning:</span>{" "}
+                        <span className="font-bold text-brand-deep">Positioning:</span>{" "}
                         {result.positioning}
                       </p>
                     )}
                     {result.strengths?.length > 0 && (
                       <p>
-                        <span className="font-medium text-zinc-700">Strengths:</span>{" "}
+                        <span className="font-bold text-brand-deep">Strengths:</span>{" "}
                         {result.strengths.join("; ")}
                       </p>
                     )}
                     {result.weaknesses?.length > 0 && (
                       <p>
-                        <span className="font-medium text-zinc-700">Weaknesses:</span>{" "}
+                        <span className="font-bold text-brand-deep">Weaknesses:</span>{" "}
                         {result.weaknesses.join("; ")}
                       </p>
                     )}
                     {result.toneDescriptors?.length > 0 && (
                       <p>
-                        <span className="font-medium text-zinc-700">Tone:</span>{" "}
+                        <span className="font-bold text-brand-deep">Tone:</span>{" "}
                         {result.toneDescriptors.join(", ")}
                       </p>
                     )}
                     {result.sources?.length > 0 && (
-                      <p className="text-zinc-400">
+                      <p className="text-muted">
                         Sources: {result.sources.join(", ")}
                       </p>
                     )}
@@ -491,12 +482,58 @@ function CompetitorAuditPanel({
           type="submit"
           disabled={!hasAnyResearch}
           title={hasAnyResearch ? undefined : "Research at least one competitor first"}
-          className="rounded-md bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+          className={ui.btnDark}
         >
           Synthesize comparison
         </button>
       </form>
     </div>
+  );
+}
+
+function SectionStepper({
+  projectId,
+  currentType,
+  statusByType,
+}: {
+  projectId: string;
+  currentType: SectionType;
+  statusByType: Map<SectionType, string>;
+}) {
+  return (
+    <nav aria-label="Sections" className="lg:sticky lg:top-6">
+      <ol className="flex gap-1.5 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
+        {ORDERED_SECTION_TYPES.map((type) => {
+          const def = SECTION_DEFINITIONS[type];
+          const status = statusByType.get(type) ?? "not_started";
+          const isCurrent = type === currentType;
+          const dot =
+            status === "approved"
+              ? "bg-brand"
+              : status === "not_started"
+                ? "border border-line bg-transparent"
+                : "bg-mint";
+          return (
+            <li key={type} className="shrink-0">
+              <Link
+                href={`/projects/${projectId}/${type}`}
+                aria-current={isCurrent ? "step" : undefined}
+                className={`flex items-center gap-2.5 rounded-full py-2 pl-3 pr-4 text-xs font-semibold transition lg:rounded-xl ${
+                  isCurrent
+                    ? "bg-ink text-white"
+                    : "text-muted hover:bg-ink/5 hover:text-ink"
+                }`}
+              >
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
+                <span className="whitespace-nowrap">
+                  {def.order}. {def.displayName}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
 
@@ -519,10 +556,19 @@ export default async function SectionWizardPage({
   if (!result) notFound();
   const { section, currentVersion } = result;
 
+  const allSections = await db
+    .select()
+    .from(sectionsTable)
+    .where(eq(sectionsTable.projectId, projectId));
+  const statusByType = new Map(
+    allSections.map((s) => [s.sectionType as SectionType, s.status]),
+  );
+
   const unlocked = await isGenerateUnlocked(projectId, type);
   const missing = def.requiredContext.filter(
-    (rc) => rc !== type,
+    (rc) => rc !== type && statusByType.get(rc) !== "approved",
   );
+  const missingNames = missing.map((m) => SECTION_DEFINITIONS[m].displayName);
 
   const rawContent = currentVersion?.content as unknown;
 
@@ -598,6 +644,8 @@ export default async function SectionWizardPage({
     ? await getRecentAIVersions(projectId, type, 4)
     : [];
 
+  const isRtl = project.language === "ar";
+
   function metaLabel(meta: unknown): string {
     if (meta && typeof meta === "object" && "provider" in meta) {
       const provider = (meta as { provider?: AIProvider }).provider;
@@ -614,189 +662,239 @@ export default async function SectionWizardPage({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="border-b border-zinc-200 bg-white px-8 py-4">
-        <a
-          href={`/projects/${projectId}`}
-          className="text-sm text-zinc-500 hover:text-zinc-800"
+    <div className="min-h-screen bg-paper">
+      <AppHeader backHref={`/projects/${projectId}`} backLabel={project.name}>
+        <Link
+          href={`/projects/${projectId}/review`}
+          className="rounded-full px-3 py-1.5 text-sm text-white/60 transition hover:bg-white/10 hover:text-white"
         >
-          &larr; {project.name}
-        </a>
-        <h1 className="mt-1 text-lg font-semibold text-zinc-900">
-          {def.order}. {def.displayName}
-        </h1>
-        <p className="text-xs text-zinc-500">{def.summary}</p>
-      </header>
+          Review &amp; export
+        </Link>
+      </AppHeader>
 
-      <main className="mx-auto max-w-2xl px-8 py-10">
-        <div className="mb-4 flex items-center justify-between">
-          <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
-            {section.status.replace("_", " ")}
-          </span>
-          {def.mode !== "manual" && !unlocked && (
-            <span className="text-xs text-amber-600">
-              Generate locked until approved: {missing.join(", ")}
-            </span>
-          )}
-        </div>
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-8 sm:px-8 lg:flex-row">
+        <aside className="lg:w-60 lg:shrink-0">
+          <SectionStepper
+            projectId={projectId}
+            currentType={type}
+            statusByType={statusByType}
+          />
+        </aside>
 
-        {formBody ? (
-          <form
-            action={saveSectionAction.bind(null, projectId, type)}
-            className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-6"
-          >
-            {formBody}
-            <div className="mt-2 flex gap-2">
-              <button
-                type="submit"
-                className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-              >
-                Save notes
-              </button>
+        <main className="min-w-0 max-w-2xl flex-1">
+          <div className="mb-6">
+            <div className="mb-2 flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-3xl font-black text-ink">
+                {def.displayName}
+              </h1>
+              <StatusChip status={section.status} />
             </div>
-          </form>
-        ) : isCompetitorAudit ? (
-          <>
-            <CompetitorAuditPanel
-              projectId={projectId}
-              entries={competitorEntries}
-              hasAnyResearch={hasAnyResearch}
-            />
-            {statement && (
-              <div className="mt-4 rounded-xl border border-zinc-200 bg-white p-6">
-                <p className="mb-1 text-xs text-zinc-400">Synthesized comparison</p>
-                <p className="whitespace-pre-wrap text-sm text-zinc-800">
-                  {statement}
-                </p>
-              </div>
+            <p className="text-sm text-muted">{def.summary}</p>
+            {isAISection && !unlocked && missingNames.length > 0 && (
+              <p className="mt-3 inline-block rounded-xl bg-coral-soft px-3.5 py-2 text-xs font-semibold text-ink">
+                🔒 Drafting unlocks after you approve: {missingNames.join(", ")}
+              </p>
             )}
-          </>
-        ) : (
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 text-sm text-zinc-500">
-            This section&apos;s editor is coming in a later phase.
           </div>
-        )}
 
-        {isAISection && formBody && (
-          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-medium text-zinc-700">AI draft</h2>
-              {availableProviders.length === 0 ? (
-                <span className="text-xs text-amber-600">
-                  No AI provider configured. Add an API key to .env.local.
-                </span>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {availableProviders.map((provider) => (
-                    <form
-                      key={provider}
-                      action={generateSectionAction.bind(
-                        null,
-                        projectId,
-                        type,
-                        provider,
-                      )}
-                    >
-                      <button
-                        type="submit"
-                        disabled={!unlocked || !currentVersion}
-                        title={
-                          !currentVersion
-                            ? "Save your raw notes first"
-                            : !unlocked
-                              ? `Approve first: ${missing.join(", ")}`
-                              : undefined
-                        }
-                        className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        {statement ? "Regenerate" : "Generate"} with{" "}
-                        {PROVIDER_LABELS[provider]}
-                      </button>
-                    </form>
-                  ))}
+          {formBody ? (
+            <form
+              action={saveSectionAction.bind(null, projectId, type)}
+              className={`${ui.card} flex flex-col gap-3.5 p-6`}
+            >
+              {formBody}
+              <div className="mt-2 flex gap-2">
+                <button type="submit" className={ui.btnDark}>
+                  Save notes
+                </button>
+              </div>
+            </form>
+          ) : isCompetitorAudit ? (
+            <>
+              <CompetitorAuditPanel
+                projectId={projectId}
+                entries={competitorEntries}
+                hasAnyResearch={hasAnyResearch}
+              />
+              {statement && (
+                <div className={`${ui.card} mt-4 p-6`}>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-deep">
+                    Synthesized comparison
+                  </p>
+                  <p
+                    dir={isRtl ? "rtl" : "ltr"}
+                    className="whitespace-pre-wrap font-serif text-[15px] leading-relaxed text-ink"
+                  >
+                    {statement}
+                  </p>
                 </div>
               )}
+            </>
+          ) : (
+            <div className={`${ui.card} p-6 text-sm text-muted`}>
+              This section&apos;s editor is coming in a later phase.
             </div>
+          )}
 
-            {currentVersion && statement ? (
-              <div>
-                <p className="mb-1 text-xs text-zinc-400">
-                  Current draft · {metaLabel(currentVersion.generationMetadata)}
-                </p>
-                <p className="whitespace-pre-wrap text-sm text-zinc-800">
-                  {statement}
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-zinc-400">No draft yet.</p>
-            )}
-
-            {recentAIVersions.length > 1 && (
-              <div className="mt-2 border-t border-zinc-100 pt-3">
-                <p className="mb-2 text-xs font-medium text-zinc-500">
-                  Recent AI drafts (compare &amp; pick)
-                </p>
-                <ul className="flex flex-col gap-2">
-                  {recentAIVersions.map((version) => {
-                    const isCurrent = version.id === currentVersion?.id;
-                    return (
-                      <li
-                        key={version.id}
-                        className="rounded-md border border-zinc-200 p-3"
+          {isAISection && formBody && (
+            <div className="mt-5 overflow-hidden rounded-panel bg-ink">
+              <div className="flex flex-wrap items-center justify-between gap-3 px-6 pb-4 pt-5">
+                <h2 className="font-display text-lg font-bold text-white">
+                  AI draft
+                </h2>
+                {availableProviders.length === 0 ? (
+                  <span className="rounded-full bg-coral px-3 py-1.5 text-xs font-bold text-ink">
+                    No AI key configured yet — add one in Vercel settings
+                  </span>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {availableProviders.map((provider) => (
+                      <form
+                        key={provider}
+                        action={generateSectionAction.bind(
+                          null,
+                          projectId,
+                          type,
+                          provider,
+                        )}
                       >
-                        <div className="mb-1 flex items-center justify-between">
-                          <span className="text-xs font-medium text-zinc-600">
-                            {metaLabel(version.generationMetadata)} · v
-                            {version.versionNumber}
-                          </span>
-                          {isCurrent ? (
-                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                              Current
-                            </span>
-                          ) : (
-                            <form
-                              action={selectVersionAction.bind(
-                                null,
-                                projectId,
-                                type,
-                                version.id,
-                              )}
-                            >
-                              <button
-                                type="submit"
-                                className="rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium text-zinc-700 hover:bg-zinc-200"
-                              >
-                                Make current
-                              </button>
-                            </form>
-                          )}
-                        </div>
-                        <p className="line-clamp-3 whitespace-pre-wrap text-xs text-zinc-600">
-                          {draftStatement(version.content)}
-                        </p>
-                      </li>
-                    );
-                  })}
-                </ul>
+                        <button
+                          type="submit"
+                          disabled={!unlocked || !currentVersion}
+                          title={
+                            !currentVersion
+                              ? "Save your raw notes first"
+                              : !unlocked
+                                ? `Approve first: ${missingNames.join(", ")}`
+                                : undefined
+                          }
+                          className="inline-flex items-center rounded-full bg-brand px-4 py-2 text-xs font-bold text-ink transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          {statement ? "Regenerate" : "Generate"} with{" "}
+                          {PROVIDER_LABELS[provider]}
+                        </button>
+                      </form>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        )}
 
-        {currentVersion && section.status !== "approved" && (
-          <form
-            action={approveSectionAction.bind(null, projectId, type)}
-            className="mt-4"
-          >
-            <button
-              type="submit"
-              className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+              <div className="mx-2 mb-2 rounded-[1.4rem] bg-white p-6">
+                {currentVersion && statement ? (
+                  <div>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-deep">
+                      Current draft · {metaLabel(currentVersion.generationMetadata)}
+                    </p>
+                    <p
+                      dir={isRtl ? "rtl" : "ltr"}
+                      className="whitespace-pre-wrap font-serif text-[15px] leading-relaxed text-ink"
+                    >
+                      {statement}
+                    </p>
+
+                    <details className="mt-4 border-t border-line pt-3">
+                      <summary className="cursor-pointer text-xs font-semibold text-muted transition hover:text-ink">
+                        Edit this draft by hand
+                      </summary>
+                      <form
+                        action={editStatementAction.bind(null, projectId, type)}
+                        className="mt-3 flex flex-col gap-2"
+                      >
+                        <textarea
+                          name="statement"
+                          defaultValue={statement}
+                          rows={8}
+                          dir={isRtl ? "rtl" : "ltr"}
+                          className={`${ui.input} font-serif leading-relaxed`}
+                        />
+                        <div>
+                          <button type="submit" className={ui.btnSoft}>
+                            Save edited draft
+                          </button>
+                        </div>
+                      </form>
+                    </details>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted">
+                    No draft yet.{" "}
+                    {currentVersion
+                      ? "Generate one with the buttons above — it will be written from your approved sections."
+                      : "Save your notes first, then generate."}
+                  </p>
+                )}
+
+                {recentAIVersions.length > 1 && (
+                  <div className="mt-5 border-t border-line pt-4">
+                    <p className="mb-2.5 text-xs font-bold uppercase tracking-wide text-muted">
+                      Recent AI drafts — compare &amp; pick
+                    </p>
+                    <ul className="flex flex-col gap-2">
+                      {recentAIVersions.map((version) => {
+                        const isCurrent = version.id === currentVersion?.id;
+                        return (
+                          <li
+                            key={version.id}
+                            className={`rounded-card border p-3.5 ${isCurrent ? "border-brand bg-mint-soft/50" : "border-line"}`}
+                          >
+                            <div className="mb-1.5 flex items-center justify-between">
+                              <span className="text-xs font-bold text-ink">
+                                {metaLabel(version.generationMetadata)} · v
+                                {version.versionNumber}
+                              </span>
+                              {isCurrent ? (
+                                <span className="rounded-full bg-brand px-2.5 py-0.5 text-[10px] font-bold text-ink">
+                                  Current
+                                </span>
+                              ) : (
+                                <form
+                                  action={selectVersionAction.bind(
+                                    null,
+                                    projectId,
+                                    type,
+                                    version.id,
+                                  )}
+                                >
+                                  <button
+                                    type="submit"
+                                    className="rounded-full bg-ink/5 px-2.5 py-1 text-[10px] font-bold text-ink transition hover:bg-mint"
+                                  >
+                                    Make current
+                                  </button>
+                                </form>
+                              )}
+                            </div>
+                            <p
+                              dir={isRtl ? "rtl" : "ltr"}
+                              className="line-clamp-3 whitespace-pre-wrap text-xs leading-relaxed text-muted"
+                            >
+                              {draftStatement(version.content)}
+                            </p>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {currentVersion && section.status !== "approved" && (
+            <form
+              action={approveSectionAction.bind(null, projectId, type)}
+              className="mt-5"
             >
-              Approve
-            </button>
-          </form>
-        )}
-      </main>
+              <button type="submit" className={`${ui.btnPrimary} px-7 py-3`}>
+                ✓ Approve section
+              </button>
+              <p className="mt-2 text-xs text-muted">
+                Approving locks this in as context for the next sections.
+              </p>
+            </form>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

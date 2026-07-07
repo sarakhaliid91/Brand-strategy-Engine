@@ -51,10 +51,13 @@ whenever you want Claude/ChatGPT drafting and competitor research to turn on.
 
 - **AI keys are optional for launch.** Without them, the manual sections, the
   wizard, the review screen, and navigation all work; the "Generate" buttons just
-  show a friendly message until a key is added.
-- **PDF export** uses headless Chromium. On a serverless host it needs the
-  `@sparticuz/chromium` package wired into the export route — a small follow-up.
-  Everything else runs as-is. (It works fully when running locally.)
+  show a friendly message until a key is added. To turn AI drafting on, add
+  `OPENAI_API_KEY` (ChatGPT) and/or `ANTHROPIC_API_KEY` (Claude) in Vercel's
+  Environment Variables and redeploy.
+- **PDF export** works on Vercel via `@sparticuz/chromium` (serverless
+  Chromium), with the local Playwright browser used in development. The
+  exported PDF is fully branded: Thmanyah typefaces, green/black cover,
+  RTL-aware layout.
 - **`app/setup.sql`** is generated from the Drizzle schema
   (`app/src/lib/db/schema.ts`); regenerate with `npx drizzle-kit generate` if the
   schema changes.
