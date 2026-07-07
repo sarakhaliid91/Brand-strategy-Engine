@@ -41,7 +41,7 @@ export default async function ProjectPage({
   ).length;
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-ivory">
       <AppHeader backHref="/" backLabel={t.project.dashboard}>
         <Link href={`/projects/${id}/review`} className={ui.btnPrimary}>
           {t.project.reviewExport}
@@ -59,7 +59,7 @@ export default async function ProjectPage({
               total={ORDERED_SECTION_TYPES.length}
               className="max-w-xs"
             />
-            <span className="text-xs font-bold text-muted">
+            <span className="text-xs font-bold text-ink-soft">
               {t.dashboard.approvedOf(
                 approvedCount,
                 ORDERED_SECTION_TYPES.length,
@@ -77,14 +77,14 @@ export default async function ProjectPage({
               <li key={type}>
                 <Link
                   href={`/projects/${id}/${type}`}
-                  className="flex items-center gap-4 rounded-card border border-line bg-card px-5 py-4 transition hover:border-brand hover:bg-mint-soft/40"
+                  className="flex items-center gap-4 rounded-card border border-line bg-cream px-5 py-4 transition hover:border-plum hover:bg-ivory-dark/40"
                 >
-                  <span className="w-8 shrink-0 font-display text-2xl font-black text-brand">
+                  <span className="w-8 shrink-0 font-display text-2xl font-black text-plum">
                     {def.order}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-ink">{loc.name}</p>
-                    <p className="truncate text-xs text-muted">{loc.summary}</p>
+                    <p className="truncate text-xs text-ink-soft">{loc.summary}</p>
                   </div>
                   <StatusChip status={status} />
                 </Link>

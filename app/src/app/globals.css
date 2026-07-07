@@ -1,36 +1,35 @@
 @import "tailwindcss";
 
 /*
- * Thmanyah-derived design system.
- * Palette sampled from the brand guide: vivid green, mint highlight,
- * deep-green ink, near-black, warm paper, coral accent.
+ * Visual Foundations — the strategist's design system.
+ * Deliberately small palette: seven colors, no greys, no pure white or
+ * pure black. Rules: at most two of {ivory, ivory-dark, cream} per
+ * composition; plum and plum-deep never together at large scale; peach
+ * is one element per view.
  */
 :root {
-  --brand: #00bb65;
-  --brand-deep: #004223;
-  --mint: #9ce2ae;
-  --mint-soft: #e3f6e9;
-  --ink: #0d0d0d;
-  --paper: #f6f4ee;
-  --card: #ffffff;
-  --muted: #6b6b66;
-  --line: #e4e1d8;
-  --coral: #ff815e;
-  --coral-soft: #ffe9e2;
+  --ivory: #f4ede3;
+  --ivory-dark: #ebe1d2;
+  --cream: #faf5ec;
+  --plum: #5b2e3a;
+  --plum-deep: #3d1e26;
+  --peach: #d98e6a;
+  --peach-soft: #e8b79a;
+  --ink: #2a1e1a;
+  --ink-soft: #4a3a33;
 }
 
 @theme inline {
-  --color-brand: var(--brand);
-  --color-brand-deep: var(--brand-deep);
-  --color-mint: var(--mint);
-  --color-mint-soft: var(--mint-soft);
+  --color-ivory: var(--ivory);
+  --color-ivory-dark: var(--ivory-dark);
+  --color-cream: var(--cream);
+  --color-plum: var(--plum);
+  --color-plum-deep: var(--plum-deep);
+  --color-peach: var(--peach);
+  --color-peach-soft: var(--peach-soft);
   --color-ink: var(--ink);
-  --color-paper: var(--paper);
-  --color-card: var(--card);
-  --color-muted: var(--muted);
-  --color-line: var(--line);
-  --color-coral: var(--coral);
-  --color-coral-soft: var(--coral-soft);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--ivory-dark);
 
   --font-sans: var(--font-thmanyah-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-thmanyah-display), ui-serif, Georgia, serif;
@@ -41,14 +40,14 @@
 }
 
 body {
-  background: var(--paper);
+  background: var(--ivory);
   color: var(--ink);
   font-family: var(--font-thmanyah-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Guide motif: mint highlight band behind display words. */
+/* Highlight band behind display words (peach-soft per the accent rules). */
 .bse-mark {
-  background: var(--mint);
+  background: var(--peach-soft);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   padding: 0.05em 0.18em;

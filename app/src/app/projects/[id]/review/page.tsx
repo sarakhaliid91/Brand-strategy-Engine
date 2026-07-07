@@ -32,7 +32,7 @@ export default async function ReviewPage({
   const contentDir = project.language === "ar" ? "rtl" : "ltr";
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-ivory">
       <AppHeader backHref={`/projects/${projectId}`} backLabel={project.name}>
         {allApproved ? (
           <a href={`/api/projects/${projectId}/export`} className={ui.btnPrimary}>
@@ -41,7 +41,7 @@ export default async function ReviewPage({
         ) : (
           <span
             title={t.review.exportLockedTitle}
-            className="cursor-not-allowed rounded-full bg-white/10 px-5 py-2.5 text-sm font-bold text-white/40"
+            className="cursor-not-allowed rounded-full bg-cream/10 px-5 py-2.5 text-sm font-bold text-cream/40"
           >
             {t.review.exportPdf}
           </span>
@@ -53,21 +53,21 @@ export default async function ReviewPage({
           <h1 className="font-display text-4xl font-black text-ink">
             {t.review.title}
           </h1>
-          <p className="mt-1 text-sm text-muted">{project.name}</p>
+          <p className="mt-1 text-sm text-ink-soft">{project.name}</p>
           <div className="mt-4 flex items-center gap-3">
             <ProgressBar
               value={approvedCount}
               total={sections.length}
               className="max-w-xs"
             />
-            <span className="text-xs font-bold text-muted">
+            <span className="text-xs font-bold text-ink-soft">
               {t.dashboard.approvedOf(approvedCount, sections.length)}
             </span>
           </div>
         </div>
 
         {!allApproved && (
-          <p className="mb-8 rounded-card bg-coral-soft px-5 py-4 text-sm font-semibold text-ink">
+          <p className="mb-8 rounded-card bg-peach-soft px-5 py-4 text-sm font-semibold text-ink">
             {t.review.lockedBanner}
           </p>
         )}
@@ -80,11 +80,11 @@ export default async function ReviewPage({
               <section key={type}>
                 <div className="mb-2.5 flex items-baseline justify-between gap-2">
                   <h2 className="font-display text-xl font-bold text-ink">
-                    <span className="text-brand">{def.order}.</span> {loc.name}
+                    <span className="text-plum">{def.order}.</span> {loc.name}
                   </h2>
                   <Link
                     href={`/projects/${projectId}/${type}`}
-                    className="shrink-0 text-xs font-semibold text-muted transition hover:text-ink"
+                    className="shrink-0 text-xs font-semibold text-ink-soft transition hover:text-ink"
                   >
                     {status === "approved" ? t.review.edit : t.review.open}
                   </Link>
@@ -92,12 +92,12 @@ export default async function ReviewPage({
                 {status === "approved" && content ? (
                   <div
                     dir={contentDir}
-                    className="rounded-card border border-line bg-card p-6 text-start font-serif text-[15px] leading-relaxed text-ink [&_.bse-block]:mb-3.5 [&_.bse-block-heading]:mb-1 [&_.bse-block-heading]:font-sans [&_.bse-block-heading]:text-xs [&_.bse-block-heading]:font-bold [&_.bse-block-heading]:uppercase [&_.bse-block-heading]:tracking-wide [&_.bse-block-heading]:text-brand-deep [&_.bse-para]:mb-2 [&_.bse-para]:whitespace-pre-wrap [&_.bse-values]:flex [&_.bse-values]:flex-col [&_.bse-values]:gap-1.5 [&_.bse-value-name]:font-bold [&_.bse-persona-name]:font-display [&_.bse-persona-name]:text-lg [&_.bse-persona-name]:font-bold"
+                    className="rounded-card border border-line bg-cream p-6 text-start font-serif text-[15px] leading-relaxed text-ink [&_.bse-block]:mb-3.5 [&_.bse-block-heading]:mb-1 [&_.bse-block-heading]:font-sans [&_.bse-block-heading]:text-xs [&_.bse-block-heading]:font-bold [&_.bse-block-heading]:uppercase [&_.bse-block-heading]:tracking-wide [&_.bse-block-heading]:text-plum [&_.bse-para]:mb-2 [&_.bse-para]:whitespace-pre-wrap [&_.bse-values]:flex [&_.bse-values]:flex-col [&_.bse-values]:gap-1.5 [&_.bse-value-name]:font-bold [&_.bse-persona-name]:font-display [&_.bse-persona-name]:text-lg [&_.bse-persona-name]:font-bold"
                   >
                     <SectionContentView type={type} content={content} />
                   </div>
                 ) : (
-                  <div className="rounded-card border border-dashed border-line bg-card/50 p-6 text-sm text-muted">
+                  <div className="rounded-card border border-dashed border-line bg-cream/50 p-6 text-sm text-ink-soft">
                     {t.review.notApproved}
                   </div>
                 )}

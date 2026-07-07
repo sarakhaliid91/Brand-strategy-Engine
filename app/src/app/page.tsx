@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   const clients = await getClientsWithProjects(session.user.id);
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-ivory">
       <AppHeader />
 
       <main className="mx-auto max-w-4xl px-6 py-10 sm:px-8">
@@ -25,7 +25,7 @@ export default async function DashboardPage() {
             <h1 className="font-display text-4xl font-black text-ink">
               {t.dashboard.title}
             </h1>
-            <p className="mt-1 text-sm text-muted">{t.dashboard.subtitle}</p>
+            <p className="mt-1 text-sm text-ink-soft">{t.dashboard.subtitle}</p>
           </div>
           <form action={createClientAction} className="flex gap-2">
             <input
@@ -41,11 +41,11 @@ export default async function DashboardPage() {
         </div>
 
         {clients.length === 0 && (
-          <div className="rounded-panel bg-mint-soft px-8 py-16 text-center">
-            <p className="font-display text-2xl font-bold text-brand-deep">
+          <div className="rounded-panel bg-ivory-dark px-8 py-16 text-center">
+            <p className="font-display text-2xl font-bold text-plum">
               {t.dashboard.emptyTitle}
             </p>
-            <p className="mt-2 text-sm text-brand-deep/70">
+            <p className="mt-2 text-sm text-plum/70">
               {t.dashboard.emptyHint}
             </p>
           </div>
@@ -67,14 +67,14 @@ export default async function DashboardPage() {
                     <li key={project.id}>
                       <Link
                         href={`/projects/${project.id}`}
-                        className="group flex items-center gap-4 rounded-card border border-line px-5 py-4 transition hover:border-brand hover:bg-mint-soft/40"
+                        className="group flex items-center gap-4 rounded-card border border-line px-5 py-4 transition hover:border-plum hover:bg-ivory-dark/40"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="mb-1.5 flex items-center gap-2">
                             <span className="truncate text-sm font-bold text-ink">
                               {project.name}
                             </span>
-                            <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold uppercase text-muted">
+                            <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold uppercase text-ink-soft">
                               {project.language === "ar" ? "العربية" : "EN"}
                             </span>
                           </div>
@@ -84,7 +84,7 @@ export default async function DashboardPage() {
                           />
                         </div>
                         <span
-                          className={`shrink-0 text-xs font-bold ${done ? "text-brand-deep" : "text-muted"}`}
+                          className={`shrink-0 text-xs font-bold ${done ? "text-plum" : "text-ink-soft"}`}
                         >
                           {done
                             ? t.dashboard.complete
@@ -98,7 +98,7 @@ export default async function DashboardPage() {
                   );
                 })}
                 {client.projects.length === 0 && (
-                  <li className="rounded-card border border-dashed border-line px-5 py-4 text-sm text-muted">
+                  <li className="rounded-card border border-dashed border-line px-5 py-4 text-sm text-ink-soft">
                     {t.dashboard.noProjects}
                   </li>
                 )}

@@ -2,27 +2,27 @@ import Link from "next/link";
 import { signOutAction, setLanguageAction } from "@/app/actions";
 import { getDict } from "@/lib/i18n";
 
-/* Shared class recipes — one place to keep the Thmanyah look consistent. */
+/* Shared class recipes — one place to keep the visual system consistent. */
 export const ui = {
   btnPrimary:
-    "inline-flex items-center justify-center rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-ink transition hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40",
+    "inline-flex items-center justify-center rounded-full bg-plum px-5 py-2.5 text-sm font-bold text-cream transition hover:bg-plum-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40",
   btnDark:
-    "inline-flex items-center justify-center rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-white transition hover:bg-black active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40",
+    "inline-flex items-center justify-center rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-cream transition hover:bg-plum-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40",
   btnSoft:
-    "inline-flex items-center justify-center rounded-full bg-mint-soft px-4 py-2 text-sm font-semibold text-brand-deep transition hover:bg-mint active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40",
+    "inline-flex items-center justify-center rounded-full bg-ivory-dark px-4 py-2 text-sm font-semibold text-plum transition hover:bg-peach-soft hover:text-ink active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40",
   btnGhost:
-    "inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold text-muted transition hover:bg-ink/5 hover:text-ink",
+    "inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold text-ink-soft transition hover:bg-ink/5 hover:text-ink",
   input:
-    "rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted/60 focus:border-brand focus:ring-2 focus:ring-mint",
-  card: "rounded-card border border-line bg-card",
-  label: "text-xs font-semibold text-muted",
+    "rounded-xl border border-line bg-cream px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink-soft/50 focus:border-plum focus:ring-2 focus:ring-peach-soft",
+  card: "rounded-card border border-line bg-cream",
+  label: "text-xs font-semibold text-ink-soft",
 } as const;
 
 const STATUS_CLS: Record<string, string> = {
-  approved: "bg-brand text-ink",
-  in_review: "bg-mint text-brand-deep",
+  approved: "bg-plum text-cream",
+  in_review: "bg-peach-soft text-ink",
   draft: "bg-ink/10 text-ink",
-  not_started: "border border-dashed border-line bg-transparent text-muted",
+  not_started: "border border-dashed border-ink-soft/30 bg-transparent text-ink-soft",
 };
 
 export async function StatusChip({ status }: { status: string }) {
@@ -57,7 +57,7 @@ export function ProgressBar({
       aria-valuemax={total}
     >
       <div
-        className="h-full rounded-full bg-brand transition-all"
+        className="h-full rounded-full bg-plum transition-all"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -68,7 +68,7 @@ export function Wordmark({ inverted = false }: { inverted?: boolean }) {
   return (
     <span
       dir="ltr"
-      className={`font-display text-lg font-bold tracking-tight ${inverted ? "text-white" : "text-ink"}`}
+      className={`font-display text-lg font-bold tracking-tight ${inverted ? "text-cream" : "text-ink"}`}
     >
       Brand Strategy{" "}
       <span className="bse-mark font-black text-ink">Engine</span>
@@ -85,7 +85,7 @@ async function LanguageToggle() {
       <button
         type="submit"
         lang={other}
-        className="rounded-full border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white"
+        className="rounded-full border border-cream/25 px-3 py-1.5 text-sm font-semibold text-cream/80 transition hover:bg-cream/10 hover:text-cream"
       >
         {label}
       </button>
@@ -93,7 +93,7 @@ async function LanguageToggle() {
   );
 }
 
-/** Black app-chrome header used on every screen. */
+/** Dark plum app-chrome header used on every screen. */
 export async function AppHeader({
   backHref,
   backLabel,
@@ -105,7 +105,7 @@ export async function AppHeader({
 }) {
   const { t } = await getDict();
   return (
-    <header className="bg-ink">
+    <header className="bg-plum-deep">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4 sm:px-8">
         <div className="flex min-w-0 items-center gap-5">
           <Link href="/" className="shrink-0">
@@ -114,7 +114,7 @@ export async function AppHeader({
           {backHref && (
             <Link
               href={backHref}
-              className="hidden truncate text-sm text-white/60 transition hover:text-white sm:block"
+              className="hidden truncate text-sm text-cream/60 transition hover:text-cream sm:block"
             >
               {t.back} {backLabel ?? ""}
             </Link>
@@ -126,7 +126,7 @@ export async function AppHeader({
           <form action={signOutAction}>
             <button
               type="submit"
-              className="rounded-full px-3 py-1.5 text-sm text-white/60 transition hover:bg-white/10 hover:text-white"
+              className="rounded-full px-3 py-1.5 text-sm text-cream/60 transition hover:bg-cream/10 hover:text-cream"
             >
               {t.signOut}
             </button>

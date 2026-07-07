@@ -38,85 +38,87 @@ function blockToHtml(block: ViewBlock): string {
   }
 }
 
-/* Thmanyah palette — matches the app's design tokens in globals.css. */
+/* Visual Foundations palette — matches the app's tokens in globals.css. */
 const PRINT_CSS = `
   :root {
-    --brand: #00bb65;
-    --brand-deep: #004223;
-    --mint: #9ce2ae;
-    --ink: #0d0d0d;
-    --muted: #6b6b66;
-    --line: #e4e1d8;
+    --ivory: #f4ede3;
+    --ivory-dark: #ebe1d2;
+    --cream: #faf5ec;
+    --plum: #5b2e3a;
+    --plum-deep: #3d1e26;
+    --peach-soft: #e8b79a;
+    --ink: #2a1e1a;
+    --ink-soft: #4a3a33;
   }
   * { box-sizing: border-box; }
   html, body {
-    margin: 0; padding: 0;
+    margin: 0; padding: 0; background: var(--ivory);
     font-family: "Thmanyah Serif Text", Georgia, serif;
-    color: var(--ink); font-size: 12pt; line-height: 1.7;
+    color: var(--ink-soft); font-size: 12pt; line-height: 1.7;
   }
 
   .bse-cover {
-    height: 100vh; background: var(--ink);
+    height: 100vh; background: var(--plum-deep);
     padding: 12mm; page-break-after: always;
   }
   .bse-cover-card {
-    height: 100%; background: var(--brand); border-radius: 10mm;
+    height: 100%; background: var(--cream); border-radius: 10mm;
     padding: 18mm; display: flex; flex-direction: column;
     justify-content: center; text-align: start;
   }
   .bse-cover-kicker {
     font-family: "Thmanyah Sans", sans-serif; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.25em;
-    font-size: 10pt; color: var(--brand-deep); margin: 0 0 10mm;
+    font-size: 10pt; color: var(--plum); margin: 0 0 10mm;
   }
   .bse-cover-title {
     font-family: "Thmanyah Serif Display", serif; font-weight: 900;
     font-size: 38pt; line-height: 1.15; margin: 0 0 6mm;
-    color: var(--ink);
+    color: var(--plum);
   }
-  .bse-cover-title .bse-hl { background: var(--mint); padding: 0.03em 0.15em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .bse-cover-title .bse-hl { background: var(--peach-soft); padding: 0.03em 0.15em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
   .bse-cover-client {
     font-family: "Thmanyah Sans", sans-serif; font-weight: 700;
-    font-size: 15pt; color: var(--brand-deep); margin: 0;
+    font-size: 15pt; color: var(--ink); margin: 0;
   }
   .bse-cover-foot {
     margin-top: auto; font-family: "Thmanyah Sans", sans-serif;
-    font-size: 9pt; color: var(--brand-deep);
+    font-size: 9pt; color: var(--ink-soft);
   }
 
   .bse-section {
     padding: 14mm 18mm; page-break-inside: avoid;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--ivory-dark);
   }
   .bse-section-title {
     font-family: "Thmanyah Serif Display", serif; font-weight: 700;
-    font-size: 19pt; margin: 0 0 3px; color: var(--ink);
+    font-size: 19pt; margin: 0 0 3px; color: var(--plum);
   }
-  .bse-section-order { color: var(--brand); font-weight: 900; }
+  .bse-section-order { color: var(--ink); font-weight: 900; }
   .bse-section-summary {
     font-family: "Thmanyah Sans", sans-serif;
-    font-size: 9pt; color: var(--muted); margin: 0 0 8mm;
+    font-size: 9pt; color: var(--ink-soft); margin: 0 0 8mm;
   }
   .bse-block { margin-bottom: 5mm; }
   .bse-block-heading {
     display: inline-block; font-family: "Thmanyah Sans", sans-serif;
     font-size: 8.5pt; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.1em; color: var(--brand-deep);
-    background: var(--mint); border-radius: 99px;
+    letter-spacing: 0.1em; color: var(--ink);
+    background: var(--ivory-dark); border-radius: 99px;
     padding: 1px 8px; margin: 0 0 2mm;
   }
   .bse-para { margin: 0 0 3mm; white-space: pre-wrap; }
   .bse-persona-name {
     font-family: "Thmanyah Serif Display", serif;
-    font-weight: 700; font-size: 15pt;
+    font-weight: 700; font-size: 15pt; color: var(--ink);
   }
   .bse-values { list-style: none; padding: 0; margin: 0; }
   .bse-value { margin-bottom: 3mm; padding-inline-start: 5mm; position: relative; }
   .bse-value::before {
     content: ""; position: absolute; inset-inline-start: 0; top: 0.55em;
-    width: 2.5mm; height: 2.5mm; border-radius: 50%; background: var(--brand);
+    width: 2.5mm; height: 2.5mm; border-radius: 50%; background: var(--plum);
   }
-  .bse-value-name { font-weight: 700; }
+  .bse-value-name { font-weight: 700; color: var(--ink); }
 
   [dir="rtl"] .bse-section, [dir="rtl"] .bse-block { text-align: right; }
 `;

@@ -106,8 +106,8 @@ function FieldGroup({
   children: React.ReactNode;
 }) {
   return (
-    <fieldset className="rounded-card border border-line bg-paper/50 p-4">
-      <legend className="px-1.5 text-xs font-bold text-brand-deep">
+    <fieldset className="rounded-card border border-line bg-ivory/50 p-4">
+      <legend className="px-1.5 text-xs font-bold text-plum">
         {legend}
       </legend>
       {children}
@@ -449,7 +449,7 @@ function CompetitorAuditPanel({
       </form>
 
       {entries.length === 0 ? (
-        <div className="rounded-card bg-mint-soft px-6 py-8 text-center text-sm font-semibold text-brand-deep">
+        <div className="rounded-card bg-ivory-dark px-6 py-8 text-center text-sm font-semibold text-plum">
           {s.competitorsEmpty}
         </div>
       ) : (
@@ -464,7 +464,7 @@ function CompetitorAuditPanel({
                       {entry.competitorName}
                     </p>
                     {entry.competitorUrl && (
-                      <p className="text-xs text-muted" dir="ltr">
+                      <p className="text-xs text-ink-soft" dir="ltr">
                         {entry.competitorUrl}
                       </p>
                     )}
@@ -482,7 +482,7 @@ function CompetitorAuditPanel({
                     >
                       <button
                         type="submit"
-                        className="rounded-full px-3 py-2 text-xs font-semibold text-muted transition hover:bg-coral-soft hover:text-ink"
+                        className="rounded-full px-3 py-2 text-xs font-semibold text-ink-soft transition hover:bg-peach-soft hover:text-ink"
                       >
                         {s.remove}
                       </button>
@@ -494,30 +494,30 @@ function CompetitorAuditPanel({
                   <div className="mt-3 flex flex-col gap-1.5 border-t border-line pt-3 text-xs text-ink/80">
                     {result.positioning && (
                       <p>
-                        <span className="font-bold text-brand-deep">{s.positioning}:</span>{" "}
+                        <span className="font-bold text-plum">{s.positioning}:</span>{" "}
                         {result.positioning}
                       </p>
                     )}
                     {result.strengths?.length > 0 && (
                       <p>
-                        <span className="font-bold text-brand-deep">{s.strengths}:</span>{" "}
+                        <span className="font-bold text-plum">{s.strengths}:</span>{" "}
                         {result.strengths.join("; ")}
                       </p>
                     )}
                     {result.weaknesses?.length > 0 && (
                       <p>
-                        <span className="font-bold text-brand-deep">{s.weaknesses}:</span>{" "}
+                        <span className="font-bold text-plum">{s.weaknesses}:</span>{" "}
                         {result.weaknesses.join("; ")}
                       </p>
                     )}
                     {result.toneDescriptors?.length > 0 && (
                       <p>
-                        <span className="font-bold text-brand-deep">{s.tone}:</span>{" "}
+                        <span className="font-bold text-plum">{s.tone}:</span>{" "}
                         {result.toneDescriptors.join(", ")}
                       </p>
                     )}
                     {result.sources?.length > 0 && (
-                      <p className="text-muted" dir="ltr">
+                      <p className="text-ink-soft" dir="ltr">
                         {s.sources}: {result.sources.join(", ")}
                       </p>
                     )}
@@ -564,10 +564,10 @@ function SectionStepper({
           const isCurrent = type === currentType;
           const dot =
             status === "approved"
-              ? "bg-brand"
+              ? "bg-plum"
               : status === "not_started"
                 ? "border border-line bg-transparent"
-                : "bg-mint";
+                : "bg-peach-soft";
           return (
             <li key={type} className="shrink-0">
               <Link
@@ -575,8 +575,8 @@ function SectionStepper({
                 aria-current={isCurrent ? "step" : undefined}
                 className={`flex items-center gap-2.5 rounded-full px-4 py-2 text-xs font-semibold transition lg:rounded-xl ${
                   isCurrent
-                    ? "bg-ink text-white"
-                    : "text-muted hover:bg-ink/5 hover:text-ink"
+                    ? "bg-ink text-cream"
+                    : "text-ink-soft hover:bg-ink/5 hover:text-ink"
                 }`}
               >
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
@@ -738,11 +738,11 @@ export default async function SectionWizardPage({
   }
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-ivory">
       <AppHeader backHref={`/projects/${projectId}`} backLabel={project.name}>
         <Link
           href={`/projects/${projectId}/review`}
-          className="rounded-full px-3 py-1.5 text-sm text-white/60 transition hover:bg-white/10 hover:text-white"
+          className="rounded-full px-3 py-1.5 text-sm text-cream/60 transition hover:bg-cream/10 hover:text-cream"
         >
           {t.project.reviewExport}
         </Link>
@@ -766,9 +766,9 @@ export default async function SectionWizardPage({
               </h1>
               <StatusChip status={section.status} />
             </div>
-            <p className="text-sm text-muted">{loc.summary}</p>
+            <p className="text-sm text-ink-soft">{loc.summary}</p>
             {isAISection && !unlocked && missing.length > 0 && (
-              <p className="mt-3 inline-block rounded-xl bg-coral-soft px-3.5 py-2 text-xs font-semibold text-ink">
+              <p className="mt-3 inline-block rounded-xl bg-peach-soft px-3.5 py-2 text-xs font-semibold text-ink">
                 {s.lockedBanner(missingNames)}
               </p>
             )}
@@ -796,7 +796,7 @@ export default async function SectionWizardPage({
               />
               {statement && (
                 <div className={`${ui.card} mt-4 p-6`}>
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-deep">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-plum">
                     {s.synthesized}
                   </p>
                   <p
@@ -809,19 +809,19 @@ export default async function SectionWizardPage({
               )}
             </>
           ) : (
-            <div className={`${ui.card} p-6 text-sm text-muted`}>
+            <div className={`${ui.card} p-6 text-sm text-ink-soft`}>
               {s.comingLater}
             </div>
           )}
 
           {isAISection && formBody && (
-            <div className="mt-5 overflow-hidden rounded-panel bg-ink">
+            <div className="mt-5 overflow-hidden rounded-panel bg-plum-deep">
               <div className="flex flex-wrap items-center justify-between gap-3 px-6 pb-4 pt-5">
-                <h2 className="font-display text-lg font-bold text-white">
+                <h2 className="font-display text-lg font-bold text-cream">
                   {s.aiDraft}
                 </h2>
                 {availableProviders.length === 0 ? (
-                  <span className="rounded-full bg-coral px-3 py-1.5 text-xs font-bold text-ink">
+                  <span className="rounded-full bg-peach px-3 py-1.5 text-xs font-bold text-ink">
                     {s.noKey}
                   </span>
                 ) : (
@@ -846,7 +846,7 @@ export default async function SectionWizardPage({
                                 ? s.approveFirst(missingNames)
                                 : undefined
                           }
-                          className="inline-flex items-center rounded-full bg-brand px-4 py-2 text-xs font-bold text-ink transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                          className="inline-flex items-center rounded-full bg-peach-soft px-4 py-2 text-xs font-bold text-ink transition hover:bg-peach active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           {s.withProvider(
                             statement ? s.regenerate : s.generate,
@@ -859,10 +859,10 @@ export default async function SectionWizardPage({
                 )}
               </div>
 
-              <div className="mx-2 mb-2 rounded-[1.4rem] bg-white p-6">
+              <div className="mx-2 mb-2 rounded-[1.4rem] bg-cream p-6">
                 {currentVersion && statement ? (
                   <div>
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-deep">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-plum">
                       {s.currentDraft} · {metaLabel(currentVersion.generationMetadata)}
                     </p>
                     <p
@@ -873,7 +873,7 @@ export default async function SectionWizardPage({
                     </p>
 
                     <details className="mt-4 border-t border-line pt-3">
-                      <summary className="cursor-pointer text-xs font-semibold text-muted transition hover:text-ink">
+                      <summary className="cursor-pointer text-xs font-semibold text-ink-soft transition hover:text-ink">
                         {s.editByHand}
                       </summary>
                       <form
@@ -896,7 +896,7 @@ export default async function SectionWizardPage({
                     </details>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted">
+                  <p className="text-sm text-ink-soft">
                     {s.noDraftYet}{" "}
                     {currentVersion ? s.noDraftGenerate : s.noDraftSave}
                   </p>
@@ -904,7 +904,7 @@ export default async function SectionWizardPage({
 
                 {recentAIVersions.length > 1 && (
                   <div className="mt-5 border-t border-line pt-4">
-                    <p className="mb-2.5 text-xs font-bold uppercase tracking-wide text-muted">
+                    <p className="mb-2.5 text-xs font-bold uppercase tracking-wide text-ink-soft">
                       {s.recentDrafts}
                     </p>
                     <ul className="flex flex-col gap-2">
@@ -913,7 +913,7 @@ export default async function SectionWizardPage({
                         return (
                           <li
                             key={version.id}
-                            className={`rounded-card border p-3.5 ${isCurrent ? "border-brand bg-mint-soft/50" : "border-line"}`}
+                            className={`rounded-card border p-3.5 ${isCurrent ? "border-plum bg-ivory-dark/50" : "border-line"}`}
                           >
                             <div className="mb-1.5 flex items-center justify-between">
                               <span className="text-xs font-bold text-ink">
@@ -921,7 +921,7 @@ export default async function SectionWizardPage({
                                 {version.versionNumber}
                               </span>
                               {isCurrent ? (
-                                <span className="rounded-full bg-brand px-2.5 py-0.5 text-[10px] font-bold text-ink">
+                                <span className="rounded-full bg-plum px-2.5 py-0.5 text-[10px] font-bold text-cream">
                                   {s.current}
                                 </span>
                               ) : (
@@ -935,7 +935,7 @@ export default async function SectionWizardPage({
                                 >
                                   <button
                                     type="submit"
-                                    className="rounded-full bg-ink/5 px-2.5 py-1 text-[10px] font-bold text-ink transition hover:bg-mint"
+                                    className="rounded-full bg-ink/5 px-2.5 py-1 text-[10px] font-bold text-ink transition hover:bg-peach-soft"
                                   >
                                     {s.makeCurrent}
                                   </button>
@@ -944,7 +944,7 @@ export default async function SectionWizardPage({
                             </div>
                             <p
                               dir={contentDir}
-                              className="line-clamp-3 whitespace-pre-wrap text-start text-xs leading-relaxed text-muted"
+                              className="line-clamp-3 whitespace-pre-wrap text-start text-xs leading-relaxed text-ink-soft"
                             >
                               {draftStatement(version.content)}
                             </p>
@@ -966,7 +966,7 @@ export default async function SectionWizardPage({
               <button type="submit" className={`${ui.btnPrimary} px-7 py-3`}>
                 {s.approve}
               </button>
-              <p className="mt-2 text-xs text-muted">{s.approveHint}</p>
+              <p className="mt-2 text-xs text-ink-soft">{s.approveHint}</p>
             </form>
           )}
         </main>
