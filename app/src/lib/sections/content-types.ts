@@ -84,6 +84,31 @@ export interface CoreMessageContent {
   statement: string;
 }
 
+/** One scored dimension of the strategist's real 6-category competitor audit rubric. */
+export interface CompetitorDimension {
+  score: number; // 0-10, overall for this dimension
+  summary: string;
+  notes: string[];
+}
+
+export interface CompetitorDimensions {
+  positioningStrategy: CompetitorDimension;
+  brandMessage: CompetitorDimension;
+  personality: CompetitorDimension;
+  brandIdentity: CompetitorDimension;
+  brandPresence: CompetitorDimension;
+  coreOffer: CompetitorDimension;
+}
+
+export const COMPETITOR_DIMENSION_LABELS: Record<keyof CompetitorDimensions, string> = {
+  positioningStrategy: "Positioning strategy",
+  brandMessage: "Brand message",
+  personality: "Personality",
+  brandIdentity: "Brand identity",
+  brandPresence: "Brand presence",
+  coreOffer: "Core offer",
+};
+
 export interface CompetitorResearchResult {
   positioning: string;
   targetAudience: string;
@@ -91,6 +116,8 @@ export interface CompetitorResearchResult {
   weaknesses: string[];
   toneDescriptors: string[];
   sources: string[];
+  /** The strategist's full scored audit across 6 dimensions, 0-10 each. */
+  dimensions?: CompetitorDimensions;
 }
 
 /** The competitor_audit section's own content holds the synthesized comparison. */

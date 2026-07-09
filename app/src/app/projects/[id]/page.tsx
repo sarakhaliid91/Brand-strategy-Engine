@@ -11,7 +11,14 @@ import {
 import { SectionType, localizedSection } from "@/lib/sections/types";
 import { getProjectOwnedByUser } from "@/lib/sections/queries";
 import { AppHeader, ProgressBar, StatusChip, ui } from "@/app/ui";
+import { ConfirmSubmitButton } from "@/app/client-ui";
+import {
+  renameProjectAction,
+  deleteProjectAction,
+  duplicateProjectAction,
+} from "@/app/actions";
 import { getDict } from "@/lib/i18n";
+import { isValidUuid } from "@/lib/db/uuid";
 
 export default async function ProjectPage({
   params,
@@ -19,6 +26,7 @@ export default async function ProjectPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (!isValidUuid(id)) notFound();
 
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
@@ -50,9 +58,49 @@ export default async function ProjectPage({
 
       <main className="mx-auto max-w-2xl px-6 py-10 sm:px-8">
         <div className="mb-8">
-          <h1 className="font-display text-4xl font-black text-ink">
-            {project.name}
-          </h1>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h1 className="font-display text-4xl font-black text-ink">
+              {project.name}
+            </h1>
+            <div className="flex items-center gap-1">
+              <details className="group relative">
+                <summary className="cursor-pointer list-none rounded-full px-3 py-1.5 text-xs font-semibold text-ink-soft transition hover:bg-ivory-dark hover:text-ink">
+                  {t.dashboard.rename}
+                </summary>
+                <form
+                  action={renameProjectAction.bind(null, id)}
+                  className="absolute end-0 top-full z-10 mt-1 flex gap-1.5 rounded-card border border-line bg-cream p-2 shadow-lg"
+                >
+                  <input
+                    name="name"
+                    defaultValue={project.name}
+                    required
+                    autoFocus
+                    className={`${ui.input} w-48`}
+                  />
+                  <button type="submit" className={ui.btnSoft}>
+                    {t.dashboard.save}
+                  </button>
+                </form>
+              </details>
+              <form action={duplicateProjectAction.bind(null, id)}>
+                <button
+                  type="submit"
+                  title={t.project.duplicateHint}
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold text-ink-soft transition hover:bg-ivory-dark hover:text-ink"
+                >
+                  {t.dashboard.duplicate}
+                </button>
+              </form>
+              <ConfirmSubmitButton
+                action={deleteProjectAction.bind(null, id)}
+                confirmMessage={t.dashboard.confirmDeleteProject(project.name)}
+                className="rounded-full px-3 py-1.5 text-xs font-semibold text-ink-soft transition hover:bg-peach-soft hover:text-ink"
+              >
+                {t.dashboard.delete}
+              </ConfirmSubmitButton>
+            </div>
+          </div>
           <div className="mt-4 flex items-center gap-3">
             <ProgressBar
               value={approvedCount}

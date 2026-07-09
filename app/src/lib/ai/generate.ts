@@ -114,9 +114,22 @@ export async function generateSectionDraft(
       throw new Error(`No prompt template implemented yet for ${sectionType}`);
   }
 
-  // Long-form sections (multi-block / multi-chapter) need a bigger budget.
-  const LONG_FORM: SectionType[] = ["core_message", "brand_story"];
-  const maxTokens = LONG_FORM.includes(sectionType) ? 4096 : 1024;
+  // Every section now drafts multi-part, richly detailed prose rather than a
+  // one-line statement, so all budgets are generous; the multi-chapter /
+  // multi-block sections need the most room.
+  const TOKEN_BUDGET: Record<SectionType, number> = {
+    purpose: 2048,
+    vision: 2048,
+    mission: 2048,
+    values: 2048,
+    audience_persona: 2048,
+    competitor_audit: 2048,
+    positioning_strategy: 3072,
+    brand_persona: 4096,
+    core_message: 8192,
+    brand_story: 8192,
+  };
+  const maxTokens = TOKEN_BUDGET[sectionType] ?? 2048;
 
   const model = getModelFor(provider);
   const statement = await getGenerator(provider).generateText({

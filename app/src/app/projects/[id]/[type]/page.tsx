@@ -58,13 +58,36 @@ import {
   BRAND_INTERVIEW_QUESTIONS,
 } from "@/lib/sections/content-types";
 import { AppHeader, StatusChip, ui } from "@/app/ui";
+import { CopyButton } from "@/app/client-ui";
 import { getDict } from "@/lib/i18n";
 import type { Dict } from "@/lib/i18n/dict";
+import { fieldExamples } from "@/lib/i18n/examples";
+import { isValidUuid } from "@/lib/db/uuid";
+
+function wordCount(text: string): number {
+  return text.trim() ? text.trim().split(/\s+/).length : 0;
+}
+
+// AI drafts are now long-form (up to ~8k output tokens for Core Message /
+// Brand Story), so give the server actions on this page more time than the
+// platform default before the function is killed.
+export const maxDuration = 60;
 
 type Fields = Dict["fields"];
+type Ex = Record<string, string>;
 
 function isSectionType(value: string): value is SectionType {
   return (SECTION_TYPES as readonly string[]).includes(value);
+}
+
+function ExampleHint({ text, exampleLabel }: { text?: string; exampleLabel: string }) {
+  if (!text) return null;
+  return (
+    <p className="text-xs leading-relaxed text-ink-soft/70">
+      <span className="font-semibold text-plum/70">{exampleLabel}</span>{" "}
+      {text.split("\n").join(" · ")}
+    </p>
+  );
 }
 
 function Field({
@@ -73,12 +96,16 @@ function Field({
   defaultValue,
   multiline = false,
   placeholder,
+  example,
+  exampleLabel = "e.g.",
 }: {
   label: string;
   name: string;
   defaultValue?: string;
   multiline?: boolean;
   placeholder?: string;
+  example?: string;
+  exampleLabel?: string;
 }) {
   return (
     <label className="flex flex-col gap-1.5">
@@ -94,6 +121,7 @@ function Field({
       ) : (
         <input name={name} defaultValue={defaultValue} className={ui.input} />
       )}
+      <ExampleHint text={example} exampleLabel={exampleLabel} />
     </label>
   );
 }
@@ -115,39 +143,52 @@ function FieldGroup({
   );
 }
 
-function PurposeForm({ content, f, ph }: { content: PurposeContent; f: Fields; ph: string }) {
+function PurposeForm({ content, f, ph, ex }: { content: PurposeContent; f: Fields; ph: string; ex: Ex }) {
   return (
     <>
-      <Field label={f.whoWeHelp} name="whoWeHelp" defaultValue={content.whoWeHelp.join("\n")} multiline placeholder={ph} />
-      <Field label={f.whatWeHelpThemWith} name="whatWeHelpThemWith" defaultValue={content.whatWeHelpThemWith.join("\n")} multiline placeholder={ph} />
-      <Field label={f.desiredEmotion} name="desiredEmotion" defaultValue={content.desiredEmotion.join("\n")} multiline placeholder={ph} />
-      <Field label={f.emotionImpact} name="emotionImpact" defaultValue={content.emotionImpact.join("\n")} multiline placeholder={ph} />
-      <Field label={f.knockOnEffect} name="knockOnEffect" defaultValue={content.knockOnEffect.join("\n")} multiline placeholder={ph} />
-      <Field label={f.practicalImpact} name="practicalImpact" defaultValue={content.practicalImpact.join("\n")} multiline placeholder={ph} />
-      <Field label={f.biggestImpact} name="biggestImpact" defaultValue={content.biggestImpact} />
+      <Field label={f.whoWeHelp} name="whoWeHelp" defaultValue={content.whoWeHelp.join("\n")} multiline placeholder={ph} example={ex.whoWeHelp}
+        />
+      <Field label={f.whatWeHelpThemWith} name="whatWeHelpThemWith" defaultValue={content.whatWeHelpThemWith.join("\n")} multiline placeholder={ph} example={ex.whatWeHelpThemWith}
+        />
+      <Field label={f.desiredEmotion} name="desiredEmotion" defaultValue={content.desiredEmotion.join("\n")} multiline placeholder={ph} example={ex.desiredEmotion}
+        />
+      <Field label={f.emotionImpact} name="emotionImpact" defaultValue={content.emotionImpact.join("\n")} multiline placeholder={ph} example={ex.emotionImpact}
+        />
+      <Field label={f.knockOnEffect} name="knockOnEffect" defaultValue={content.knockOnEffect.join("\n")} multiline placeholder={ph} example={ex.knockOnEffect}
+        />
+      <Field label={f.practicalImpact} name="practicalImpact" defaultValue={content.practicalImpact.join("\n")} multiline placeholder={ph} example={ex.practicalImpact}
+        />
+      <Field label={f.biggestImpact} name="biggestImpact" defaultValue={content.biggestImpact} example={ex.biggestImpact}
+        />
     </>
   );
 }
 
-function VisionForm({ content, f, ph }: { content: VisionContent; f: Fields; ph: string }) {
+function VisionForm({ content, f, ph, ex }: { content: VisionContent; f: Fields; ph: string; ex: Ex }) {
   return (
     <>
-      <Field label={f.customers} name="customers" defaultValue={content.customers.join("\n")} multiline placeholder={ph} />
-      <Field label={f.achievements} name="achievements" defaultValue={content.achievements.join("\n")} multiline placeholder={ph} />
-      <Field label={f.industry} name="industry" defaultValue={content.industry.join("\n")} multiline placeholder={ph} />
-      <Field label={f.environment} name="environment" defaultValue={content.environment.join("\n")} multiline placeholder={ph} />
-      <Field label={f.world} name="world" defaultValue={content.world.join("\n")} multiline placeholder={ph} />
+      <Field label={f.customers} name="customers" defaultValue={content.customers.join("\n")} multiline placeholder={ph} example={ex.customers}
+        />
+      <Field label={f.achievements} name="achievements" defaultValue={content.achievements.join("\n")} multiline placeholder={ph} example={ex.achievements}
+        />
+      <Field label={f.industry} name="industry" defaultValue={content.industry.join("\n")} multiline placeholder={ph} example={ex.industry}
+        />
+      <Field label={f.environment} name="environment" defaultValue={content.environment.join("\n")} multiline placeholder={ph} example={ex.environment}
+        />
+      <Field label={f.world} name="world" defaultValue={content.world.join("\n")} multiline placeholder={ph} example={ex.world}
+        />
     </>
   );
 }
 
-function MissionForm({ content, f, ph }: { content: MissionContent; f: Fields; ph: string }) {
+function MissionForm({ content, f, ph, ex }: { content: MissionContent; f: Fields; ph: string; ex: Ex }) {
   return (
-    <Field label={f.ongoingCommitments} name="ongoingCommitments" defaultValue={content.ongoingCommitments.join("\n")} multiline placeholder={ph} />
+    <Field label={f.ongoingCommitments} name="ongoingCommitments" defaultValue={content.ongoingCommitments.join("\n")} multiline placeholder={ph} example={ex.ongoingCommitments}
+        />
   );
 }
 
-function ValuesForm({ content, f, ph }: { content: ValuesContent; f: Fields; ph: string }) {
+function ValuesForm({ content, f, ph, ex }: { content: ValuesContent; f: Fields; ph: string; ex: Ex }) {
   const byGroup = (group: string) =>
     content.groupPerceptions.find((g) => g.group === group);
   const groupLabels: Record<string, string> = {
@@ -166,6 +207,7 @@ function ValuesForm({ content, f, ph }: { content: ValuesContent; f: Fields; ph:
               defaultValue={byGroup(group)?.comments.join("\n")}
               multiline
               placeholder={ph}
+              example={ex[`group_${group}_comments`]}
             />
             <Field
               label={f.groupRelatedValues}
@@ -173,11 +215,13 @@ function ValuesForm({ content, f, ph }: { content: ValuesContent; f: Fields; ph:
               defaultValue={byGroup(group)?.relatedValues.join("\n")}
               multiline
               placeholder={ph}
+              example={ex[`group_${group}_relatedValues`]}
             />
           </div>
         </FieldGroup>
       ))}
-      <Field label={f.shortlist} name="shortlist" defaultValue={content.shortlist.join("\n")} multiline placeholder={ph} />
+      <Field label={f.shortlist} name="shortlist" defaultValue={content.shortlist.join("\n")} multiline placeholder={ph} example={ex.shortlist}
+        />
       <Field
         label={f.coreValueNames}
         name="coreValueNames"
@@ -200,60 +244,95 @@ function AudiencePersonaForm({
   content,
   f,
   ph,
+  ex,
   archetypes,
 }: {
   content: AudiencePersonaContent;
   f: Fields;
   ph: string;
+  ex: Ex;
   archetypes: Record<string, string>;
 }) {
   return (
     <>
-      <Field label={f.personaName} name="personaName" defaultValue={content.personaName} />
+      <Field label={f.personaName} name="personaName" defaultValue={content.personaName} example={ex.personaName}
+        />
       <FieldGroup legend={f.demographics}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Field label={f.age} name="age" defaultValue={content.demographics.age} />
-          <Field label={f.gender} name="gender" defaultValue={content.demographics.gender} />
-          <Field label={f.occupation} name="occupation" defaultValue={content.demographics.occupation} />
-          <Field label={f.professionalResponsibilities} name="professionalResponsibilities" defaultValue={content.demographics.professionalResponsibilities} />
-          <Field label={f.education} name="education" defaultValue={content.demographics.education} />
-          <Field label={f.location} name="location" defaultValue={content.demographics.location} />
-          <Field label={f.personalIncome} name="personalIncome" defaultValue={content.demographics.personalIncome} />
-          <Field label={f.householdIncome} name="householdIncome" defaultValue={content.demographics.householdIncome} />
-          <Field label={f.maritalStatus} name="maritalStatus" defaultValue={content.demographics.maritalStatus} />
-          <Field label={f.familyStatus} name="familyStatus" defaultValue={content.demographics.familyStatus} />
-          <Field label={f.homeownerStatus} name="homeownerStatus" defaultValue={content.demographics.homeownerStatus} />
+          <Field label={f.age} name="age" defaultValue={content.demographics.age} example={ex.age}
+        />
+          <Field label={f.gender} name="gender" defaultValue={content.demographics.gender} example={ex.gender}
+        />
+          <Field label={f.occupation} name="occupation" defaultValue={content.demographics.occupation} example={ex.occupation}
+        />
+          <Field label={f.professionalResponsibilities} name="professionalResponsibilities" defaultValue={content.demographics.professionalResponsibilities} example={ex.professionalResponsibilities}
+        />
+          <Field label={f.education} name="education" defaultValue={content.demographics.education} example={ex.education}
+        />
+          <Field label={f.location} name="location" defaultValue={content.demographics.location} example={ex.location}
+        />
+          <Field label={f.personalIncome} name="personalIncome" defaultValue={content.demographics.personalIncome} example={ex.personalIncome}
+        />
+          <Field label={f.householdIncome} name="householdIncome" defaultValue={content.demographics.householdIncome} example={ex.householdIncome}
+        />
+          <Field label={f.maritalStatus} name="maritalStatus" defaultValue={content.demographics.maritalStatus} example={ex.maritalStatus}
+        />
+          <Field label={f.familyStatus} name="familyStatus" defaultValue={content.demographics.familyStatus} example={ex.familyStatus}
+        />
+          <Field label={f.homeownerStatus} name="homeownerStatus" defaultValue={content.demographics.homeownerStatus} example={ex.homeownerStatus}
+        />
         </div>
       </FieldGroup>
       <FieldGroup legend={f.psychographics}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Field label={f.hobbiesInterests} name="hobbiesInterests" defaultValue={content.psychographics.hobbiesInterests} />
-          <Field label={f.sports} name="sports" defaultValue={content.psychographics.sports} />
-          <Field label={f.music} name="music" defaultValue={content.psychographics.music} />
-          <Field label={f.restaurantPreference} name="restaurantPreference" defaultValue={content.psychographics.restaurantPreference} />
-          <Field label={f.weekendPleasures} name="weekendPleasures" defaultValue={content.psychographics.weekendPleasures} />
-          <Field label={f.entertainment} name="entertainment" defaultValue={content.psychographics.entertainment} />
-          <Field label={f.likesToWear} name="likesToWear" defaultValue={content.psychographics.likesToWear} />
-          <Field label={f.likesToTalkAbout} name="likesToTalkAbout" defaultValue={content.psychographics.likesToTalkAbout} />
-          <Field label={f.groupsAndForums} name="groupsAndForums" defaultValue={content.psychographics.groupsAndForums} />
-          <Field label={f.favouriteApps} name="favouriteApps" defaultValue={content.psychographics.favouriteApps} />
+          <Field label={f.hobbiesInterests} name="hobbiesInterests" defaultValue={content.psychographics.hobbiesInterests} example={ex.hobbiesInterests}
+        />
+          <Field label={f.sports} name="sports" defaultValue={content.psychographics.sports} example={ex.sports}
+        />
+          <Field label={f.music} name="music" defaultValue={content.psychographics.music} example={ex.music}
+        />
+          <Field label={f.restaurantPreference} name="restaurantPreference" defaultValue={content.psychographics.restaurantPreference} example={ex.restaurantPreference}
+        />
+          <Field label={f.weekendPleasures} name="weekendPleasures" defaultValue={content.psychographics.weekendPleasures} example={ex.weekendPleasures}
+        />
+          <Field label={f.entertainment} name="entertainment" defaultValue={content.psychographics.entertainment} example={ex.entertainment}
+        />
+          <Field label={f.likesToWear} name="likesToWear" defaultValue={content.psychographics.likesToWear} example={ex.likesToWear}
+        />
+          <Field label={f.likesToTalkAbout} name="likesToTalkAbout" defaultValue={content.psychographics.likesToTalkAbout} example={ex.likesToTalkAbout}
+        />
+          <Field label={f.groupsAndForums} name="groupsAndForums" defaultValue={content.psychographics.groupsAndForums} example={ex.groupsAndForums}
+        />
+          <Field label={f.favouriteApps} name="favouriteApps" defaultValue={content.psychographics.favouriteApps} example={ex.favouriteApps}
+        />
         </div>
       </FieldGroup>
       <FieldGroup legend={f.personality}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Field label={f.behaviouralCharacteristics} name="behaviouralCharacteristics" defaultValue={content.personality.behaviouralCharacteristics} />
-          <Field label={f.mostPassionateAbout} name="mostPassionateAbout" defaultValue={content.personality.mostPassionateAbout} />
-          <Field label={f.obligationsTheyHate} name="obligationsTheyHate" defaultValue={content.personality.obligationsTheyHate} />
-          <Field label={f.biggestPersonalGoal} name="biggestPersonalGoal" defaultValue={content.personality.biggestPersonalGoal} />
-          <Field label={f.biggestProfessionalGoal} name="biggestProfessionalGoal" defaultValue={content.personality.biggestProfessionalGoal} />
-          <Field label={f.personalityCoreValues} name="personalityCoreValues" defaultValue={content.personality.coreValues} />
-          <Field label={f.coreFears} name="coreFears" defaultValue={content.personality.coreFears} />
-          <Field label={f.coreDesire} name="coreDesire" defaultValue={content.personality.coreDesire} />
+          <Field label={f.behaviouralCharacteristics} name="behaviouralCharacteristics" defaultValue={content.personality.behaviouralCharacteristics} example={ex.behaviouralCharacteristics}
+        />
+          <Field label={f.mostPassionateAbout} name="mostPassionateAbout" defaultValue={content.personality.mostPassionateAbout} example={ex.mostPassionateAbout}
+        />
+          <Field label={f.obligationsTheyHate} name="obligationsTheyHate" defaultValue={content.personality.obligationsTheyHate} example={ex.obligationsTheyHate}
+        />
+          <Field label={f.biggestPersonalGoal} name="biggestPersonalGoal" defaultValue={content.personality.biggestPersonalGoal} example={ex.biggestPersonalGoal}
+        />
+          <Field label={f.biggestProfessionalGoal} name="biggestProfessionalGoal" defaultValue={content.personality.biggestProfessionalGoal} example={ex.biggestProfessionalGoal}
+        />
+          <Field label={f.personalityCoreValues} name="personalityCoreValues" defaultValue={content.personality.coreValues} example={ex.personalityCoreValues}
+        />
+          <Field label={f.coreFears} name="coreFears" defaultValue={content.personality.coreFears} example={ex.coreFears}
+        />
+          <Field label={f.coreDesire} name="coreDesire" defaultValue={content.personality.coreDesire} example={ex.coreDesire}
+        />
         </div>
       </FieldGroup>
-      <Field label={f.challenges} name="challenges" defaultValue={content.circumstances.challenges.join("\n")} multiline placeholder={ph} />
-      <Field label={f.desires} name="desires" defaultValue={content.circumstances.desires.join("\n")} multiline placeholder={ph} />
-      <Field label={f.fears} name="fears" defaultValue={content.circumstances.fears.join("\n")} multiline placeholder={ph} />
+      <Field label={f.challenges} name="challenges" defaultValue={content.circumstances.challenges.join("\n")} multiline placeholder={ph} example={ex.challenges}
+        />
+      <Field label={f.desires} name="desires" defaultValue={content.circumstances.desires.join("\n")} multiline placeholder={ph} example={ex.desires}
+        />
+      <Field label={f.fears} name="fears" defaultValue={content.circumstances.fears.join("\n")} multiline placeholder={ph} example={ex.fears}
+        />
       <FieldGroup legend={f.archetypeMix}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {BRAND_ARCHETYPES.map((archetype) => {
@@ -277,37 +356,49 @@ function PositioningStrategyForm({
   content,
   f,
   ph,
+  ex,
 }: {
   content: PositioningStrategyContent;
   f: Fields;
   ph: string;
+  ex: Ex;
 }) {
   return (
     <>
-      <Field label={f.unmetNeeds} name="unmetNeeds" defaultValue={content.unmetNeeds.join("\n")} multiline placeholder={ph} />
-      <Field label={f.opportunities} name="opportunities" defaultValue={content.opportunities.join("\n")} multiline placeholder={ph} />
-      <Field label={f.ideas} name="ideas" defaultValue={content.ideas.join("\n")} multiline placeholder={ph} />
+      <Field label={f.unmetNeeds} name="unmetNeeds" defaultValue={content.unmetNeeds.join("\n")} multiline placeholder={ph} example={ex.unmetNeeds}
+        />
+      <Field label={f.opportunities} name="opportunities" defaultValue={content.opportunities.join("\n")} multiline placeholder={ph} example={ex.opportunities}
+        />
+      <Field label={f.ideas} name="ideas" defaultValue={content.ideas.join("\n")} multiline placeholder={ph} example={ex.ideas}
+        />
       <FieldGroup legend={f.differentiators}>
         <div className="flex flex-col gap-2">
-          <Field label={f.ideas} name="differentiatorIdeas" defaultValue={content.differentiators.map((d) => d.idea).join("\n")} multiline placeholder={ph} />
-          <Field label={f.differentiatorAddedValues} name="differentiatorAddedValues" defaultValue={content.differentiators.map((d) => d.addedValue).join("\n")} multiline placeholder={ph} />
-          <Field label={f.differentiatorEnhances} name="differentiatorEnhances" defaultValue={content.differentiators.map((d) => d.enhancesExperience).join("\n")} multiline placeholder={ph} />
-          <Field label={f.differentiatorRatings} name="differentiatorRatings" defaultValue={content.differentiators.map((d) => d.rating).join("\n")} multiline placeholder={ph} />
+          <Field label={f.ideas} name="differentiatorIdeas" defaultValue={content.differentiators.map((d) => d.idea).join("\n")} multiline placeholder={ph} example={ex.differentiatorIdeas} />
+          <Field label={f.differentiatorAddedValues} name="differentiatorAddedValues" defaultValue={content.differentiators.map((d) => d.addedValue).join("\n")} multiline placeholder={ph} example={ex.differentiatorAddedValues} />
+          <Field label={f.differentiatorEnhances} name="differentiatorEnhances" defaultValue={content.differentiators.map((d) => d.enhancesExperience).join("\n")} multiline placeholder={ph} example={ex.differentiatorEnhances} />
+          <Field label={f.differentiatorRatings} name="differentiatorRatings" defaultValue={content.differentiators.map((d) => d.rating).join("\n")} multiline placeholder={ph} example={ex.differentiatorRatings} />
         </div>
       </FieldGroup>
       <FieldGroup legend={f.uspInputs}>
         <div className="flex flex-col gap-2">
-          <Field label={f.uspEndResult} name="uspEndResult" defaultValue={content.uspEndResult} />
-          <Field label={f.uspBenefit} name="uspBenefit" defaultValue={content.uspBenefit} />
+          <Field label={f.uspEndResult} name="uspEndResult" defaultValue={content.uspEndResult} example={ex.uspEndResult}
+        />
+          <Field label={f.uspBenefit} name="uspBenefit" defaultValue={content.uspBenefit} example={ex.uspBenefit}
+        />
         </div>
       </FieldGroup>
       <FieldGroup legend={f.posInputs}>
         <div className="flex flex-col gap-2">
-          <Field label={f.posWeHelp} name="posWeHelp" defaultValue={content.posWeHelp} />
-          <Field label={f.posWho} name="posWho" defaultValue={content.posWho} />
-          <Field label={f.posToAchieve} name="posToAchieve" defaultValue={content.posToAchieve} />
-          <Field label={f.posUnlike} name="posUnlike" defaultValue={content.posUnlike} />
-          <Field label={f.posOurSolution} name="posOurSolution" defaultValue={content.posOurSolution} />
+          <Field label={f.posWeHelp} name="posWeHelp" defaultValue={content.posWeHelp} example={ex.posWeHelp}
+        />
+          <Field label={f.posWho} name="posWho" defaultValue={content.posWho} example={ex.posWho}
+        />
+          <Field label={f.posToAchieve} name="posToAchieve" defaultValue={content.posToAchieve} example={ex.posToAchieve}
+        />
+          <Field label={f.posUnlike} name="posUnlike" defaultValue={content.posUnlike} example={ex.posUnlike}
+        />
+          <Field label={f.posOurSolution} name="posOurSolution" defaultValue={content.posOurSolution} example={ex.posOurSolution}
+        />
         </div>
       </FieldGroup>
     </>
@@ -318,12 +409,14 @@ function BrandPersonaForm({
   content,
   f,
   ph,
+  ex,
   archetypes,
   interview,
 }: {
   content: BrandPersonaContent;
   f: Fields;
   ph: string;
+  ex: Ex;
   archetypes: Record<string, string>;
   interview: Record<string, string>;
 }) {
@@ -346,20 +439,28 @@ function BrandPersonaForm({
       </FieldGroup>
       <FieldGroup legend={f.personaPersonality}>
         <div className="flex flex-col gap-2">
-          <Field label={f.personalityCharacteristics} name="personalityCharacteristics" defaultValue={content.personalityCharacteristics} />
-          <Field label={f.personalityDesires} name="personalityDesires" defaultValue={content.personalityDesires} />
-          <Field label={f.personalityFears} name="personalityFears" defaultValue={content.personalityFears} />
+          <Field label={f.personalityCharacteristics} name="personalityCharacteristics" defaultValue={content.personalityCharacteristics} example={ex.personalityCharacteristics}
+        />
+          <Field label={f.personalityDesires} name="personalityDesires" defaultValue={content.personalityDesires} example={ex.personalityDesires}
+        />
+          <Field label={f.personalityFears} name="personalityFears" defaultValue={content.personalityFears} example={ex.personalityFears}
+        />
         </div>
       </FieldGroup>
       <FieldGroup legend={f.appearance}>
         <div className="flex flex-col gap-2">
-          <Field label={f.appearanceCharacteristics} name="appearanceCharacteristics" defaultValue={content.appearanceCharacteristics} />
-          <Field label={f.dressStyle} name="dressStyle" defaultValue={content.dressStyle} />
-          <Field label={f.accessories} name="accessories" defaultValue={content.accessories} />
+          <Field label={f.appearanceCharacteristics} name="appearanceCharacteristics" defaultValue={content.appearanceCharacteristics} example={ex.appearanceCharacteristics}
+        />
+          <Field label={f.dressStyle} name="dressStyle" defaultValue={content.dressStyle} example={ex.dressStyle}
+        />
+          <Field label={f.accessories} name="accessories" defaultValue={content.accessories} example={ex.accessories}
+        />
         </div>
       </FieldGroup>
-      <Field label={f.toneOfVoice} name="toneOfVoice" defaultValue={content.toneOfVoice} multiline placeholder={ph} />
-      <Field label={f.languageKeywords} name="languageKeywords" defaultValue={content.languageKeywords} multiline placeholder={ph} />
+      <Field label={f.toneOfVoice} name="toneOfVoice" defaultValue={content.toneOfVoice} multiline placeholder={ph} example={ex.toneOfVoice}
+        />
+      <Field label={f.languageKeywords} name="languageKeywords" defaultValue={content.languageKeywords} multiline placeholder={ph} example={ex.languageKeywords}
+        />
       <FieldGroup legend={f.brandInterview}>
         <div className="flex flex-col gap-2">
           {BRAND_INTERVIEW_QUESTIONS.map((question, i) => {
@@ -372,6 +473,7 @@ function BrandPersonaForm({
                 defaultValue={existing?.answer ?? ""}
                 multiline
                 placeholder={ph}
+                example={ex[question]}
               />
             );
           })}
@@ -381,7 +483,7 @@ function BrandPersonaForm({
   );
 }
 
-function CoreMessageForm({ content, f, ph }: { content: CoreMessageContent; f: Fields; ph: string }) {
+function CoreMessageForm({ content, f, ph, ex }: { content: CoreMessageContent; f: Fields; ph: string; ex: Ex }) {
   return (
     <Field
       label={f.guidance}
@@ -389,21 +491,24 @@ function CoreMessageForm({ content, f, ph }: { content: CoreMessageContent; f: F
       defaultValue={content.guidance}
       multiline
       placeholder={ph}
-    />
+    example={ex.guidance}
+        />
   );
 }
 
-function BrandStoryForm({ content, f, ph }: { content: BrandStoryContent; f: Fields; ph: string }) {
+function BrandStoryForm({ content, f, ph, ex }: { content: BrandStoryContent; f: Fields; ph: string; ex: Ex }) {
   return (
     <>
-      <Field label={f.characterName} name="characterName" defaultValue={content.characterName} />
+      <Field label={f.characterName} name="characterName" defaultValue={content.characterName} example={ex.characterName}
+        />
       <Field
         label={f.storyGuidance}
         name="guidance"
         defaultValue={content.guidance}
         multiline
         placeholder={ph}
-      />
+      example={ex.guidance}
+        />
     </>
   );
 }
@@ -521,6 +626,37 @@ function CompetitorAuditPanel({
                         {s.sources}: {result.sources.join(", ")}
                       </p>
                     )}
+
+                    {result.dimensions && (
+                      <div className="mt-2 border-t border-line pt-3">
+                        <p className="mb-2 font-bold text-plum">
+                          {s.dimensionsHeading}
+                        </p>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          {(Object.keys(result.dimensions) as (keyof typeof result.dimensions)[]).map(
+                            (key) => {
+                              const dim = result.dimensions![key];
+                              return (
+                                <div
+                                  key={key}
+                                  className="rounded-card bg-ivory px-3 py-2"
+                                >
+                                  <div className="mb-1 flex items-center justify-between gap-2">
+                                    <span className="font-semibold text-ink">
+                                      {s[`dimension_${key}` as keyof typeof s] as string}
+                                    </span>
+                                    <span className="shrink-0 rounded-full bg-plum px-2 py-0.5 text-[10px] font-bold text-cream">
+                                      {dim.score}/10
+                                    </span>
+                                  </div>
+                                  <p className="text-ink-soft">{dim.summary}</p>
+                                </div>
+                              );
+                            },
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </li>
@@ -599,6 +735,7 @@ export default async function SectionWizardPage({
 }) {
   const { id: projectId, type } = await params;
   if (!isSectionType(type)) notFound();
+  if (!isValidUuid(projectId)) notFound();
 
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
@@ -610,6 +747,7 @@ export default async function SectionWizardPage({
   const s = t.section;
   const f = t.fields;
   const ph = s.onePerLine;
+  const ex = fieldExamples[locale];
 
   const def = SECTION_DEFINITIONS[type];
   const loc = localizedSection(def, locale);
@@ -638,16 +776,16 @@ export default async function SectionWizardPage({
   let formBody: React.ReactNode;
   switch (type) {
     case "purpose":
-      formBody = <PurposeForm content={(rawContent as PurposeContent) ?? emptyPurposeContent()} f={f} ph={ph} />;
+      formBody = <PurposeForm content={(rawContent as PurposeContent) ?? emptyPurposeContent()} f={f} ph={ph} ex={ex} />;
       break;
     case "vision":
-      formBody = <VisionForm content={(rawContent as VisionContent) ?? emptyVisionContent()} f={f} ph={ph} />;
+      formBody = <VisionForm content={(rawContent as VisionContent) ?? emptyVisionContent()} f={f} ph={ph} ex={ex} />;
       break;
     case "mission":
-      formBody = <MissionForm content={(rawContent as MissionContent) ?? emptyMissionContent()} f={f} ph={ph} />;
+      formBody = <MissionForm content={(rawContent as MissionContent) ?? emptyMissionContent()} f={f} ph={ph} ex={ex} />;
       break;
     case "values":
-      formBody = <ValuesForm content={(rawContent as ValuesContent) ?? emptyValuesContent()} f={f} ph={ph} />;
+      formBody = <ValuesForm content={(rawContent as ValuesContent) ?? emptyValuesContent()} f={f} ph={ph} ex={ex} />;
       break;
     case "audience_persona":
       formBody = (
@@ -655,6 +793,7 @@ export default async function SectionWizardPage({
           content={(rawContent as AudiencePersonaContent) ?? emptyAudiencePersonaContent()}
           f={f}
           ph={ph}
+          ex={ex}
           archetypes={t.archetypes}
         />
       );
@@ -665,6 +804,7 @@ export default async function SectionWizardPage({
           content={(rawContent as PositioningStrategyContent) ?? emptyPositioningStrategyContent()}
           f={f}
           ph={ph}
+          ex={ex}
         />
       );
       break;
@@ -674,6 +814,7 @@ export default async function SectionWizardPage({
           content={(rawContent as BrandPersonaContent) ?? emptyBrandPersonaContent()}
           f={f}
           ph={ph}
+          ex={ex}
           archetypes={t.archetypes}
           interview={t.interview}
         />
@@ -685,6 +826,7 @@ export default async function SectionWizardPage({
           content={(rawContent as CoreMessageContent) ?? emptyCoreMessageContent()}
           f={f}
           ph={ph}
+          ex={ex}
         />
       );
       break;
@@ -694,6 +836,7 @@ export default async function SectionWizardPage({
           content={(rawContent as BrandStoryContent) ?? emptyBrandStoryContent()}
           f={f}
           ph={ph}
+          ex={ex}
         />
       );
       break;
@@ -862,9 +1005,19 @@ export default async function SectionWizardPage({
               <div className="mx-2 mb-2 rounded-[1.4rem] bg-cream p-6">
                 {currentVersion && statement ? (
                   <div>
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-plum">
-                      {s.currentDraft} · {metaLabel(currentVersion.generationMetadata)}
-                    </p>
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-xs font-bold uppercase tracking-wide text-plum">
+                        {s.currentDraft} · {metaLabel(currentVersion.generationMetadata)}
+                        {" · "}
+                        {s.wordCount(wordCount(statement))}
+                      </p>
+                      <CopyButton
+                        text={statement}
+                        label={s.copyDraft}
+                        copiedLabel={s.copied}
+                        className="rounded-full bg-ivory-dark px-3 py-1 text-[11px] font-bold text-plum transition hover:bg-peach-soft hover:text-ink"
+                      />
+                    </div>
                     <p
                       dir={contentDir}
                       className="whitespace-pre-wrap text-start font-serif text-[15px] leading-relaxed text-ink"

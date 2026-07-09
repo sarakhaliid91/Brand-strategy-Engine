@@ -7,7 +7,10 @@ export function buildPurposePrompt(args: {
   const { content, language } = args;
   const langName = language === "ar" ? "Arabic" : "English";
 
-  return `You are a senior brand strategist drafting an internal Brand Purpose statement.
+  return `You are a senior brand strategist drafting an internal Brand Purpose statement for a
+paying client's brand strategy deck. This document will be read by the business owner and used
+to align every future decision, so it must feel specific to THIS business, never generic or
+interchangeable with any other brand.
 
 Raw inputs gathered from the strategist:
 - Who we are helping: ${content.whoWeHelp.join("; ") || "(not provided)"}
@@ -18,8 +21,15 @@ Raw inputs gathered from the strategist:
 - Practical impact of that knock-on effect: ${content.practicalImpact.join("; ") || "(not provided)"}
 - Biggest impact the brand can have in customers' lives: ${content.biggestImpact || "(not provided)"}
 
-Write a single, polished Brand Purpose statement in ${langName} (2-3 sentences) that synthesizes
-the above into a clear statement of who the brand serves, what it does for them, and the
-deeper impact it has on their lives. Write only the statement itself, no preamble, no quotes,
-no markdown.`;
+Write a single, polished Brand Purpose statement in ${langName}: one substantial, well-crafted
+paragraph (aim for 5-8 sentences, roughly 90-160 words). It must:
+- Name specifically who the brand serves and what it does for them, using the concrete details
+  above rather than vague categories.
+- Trace the emotional chain from "what we do" through to "the deeper impact on their lives" —
+  do not skip straight to a platitude.
+- End on the single biggest, most specific impact the brand has in customers' lives.
+- Read as finished, client-ready copy — vivid and concrete, not a generic mission-statement
+  template that could apply to any business in any category.
+
+Write only the statement itself, no preamble, no quotes, no markdown, no headings.`;
 }

@@ -34,11 +34,26 @@ const en = {
     approvedOf: (a: number, b: number) => `${a}/${b} approved`,
     arabic: "Arabic",
     english: "English",
+    searchPlaceholder: "Search clients...",
+    noSearchMatches: "No clients match your search.",
+    rename: "Rename",
+    delete: "Delete",
+    duplicate: "Duplicate",
+    save: "Save",
+    cancel: "Cancel",
+    confirmDeleteClient: (name: string) =>
+      `Delete "${name}" and every project and section under it? This can't be undone.`,
+    confirmDeleteProject: (name: string) =>
+      `Delete project "${name}" and all its sections? This can't be undone.`,
   },
 
   project: {
     dashboard: "Dashboard",
     reviewExport: "Review & export",
+    rename: "Rename project",
+    delete: "Delete project",
+    duplicate: "Duplicate project",
+    duplicateHint: "Creates a copy of this project's content as a new starting point.",
   },
 
   review: {
@@ -72,6 +87,9 @@ const en = {
     noDraftSave: "Save your notes first, then generate.",
     editByHand: "Edit this draft by hand",
     saveEditedDraft: "Save edited draft",
+    wordCount: (n: number) => `${n.toLocaleString()} words`,
+    copyDraft: "Copy",
+    copied: "Copied!",
     recentDrafts: "Recent AI drafts — compare & pick",
     current: "Current",
     makeCurrent: "Make current",
@@ -93,6 +111,13 @@ const en = {
     weaknesses: "Weaknesses",
     tone: "Tone",
     sources: "Sources",
+    dimensionsHeading: "Scored audit (0-10)",
+    dimension_positioningStrategy: "Positioning strategy",
+    dimension_brandMessage: "Brand message",
+    dimension_personality: "Personality",
+    dimension_brandIdentity: "Brand identity",
+    dimension_brandPresence: "Brand presence",
+    dimension_coreOffer: "Core offer",
   },
 
   status: {
@@ -277,11 +302,26 @@ const ar: Dict = {
     approvedOf: (a: number, b: number) => `اعتُمد ${a} من ${b}`,
     arabic: "العربية",
     english: "الإنجليزية",
+    searchPlaceholder: "ابحثي عن عميل...",
+    noSearchMatches: "لا يوجد عملاء مطابقون لبحثك.",
+    rename: "إعادة تسمية",
+    delete: "حذف",
+    duplicate: "نسخ",
+    save: "حفظ",
+    cancel: "إلغاء",
+    confirmDeleteClient: (name: string) =>
+      `حذف "${name}" وكل مشاريعه وأقسامه؟ لا يمكن التراجع عن هذا.`,
+    confirmDeleteProject: (name: string) =>
+      `حذف مشروع "${name}" وكل أقسامه؟ لا يمكن التراجع عن هذا.`,
   },
 
   project: {
     dashboard: "لوحة التحكم",
     reviewExport: "المراجعة والتصدير",
+    rename: "إعادة تسمية المشروع",
+    delete: "حذف المشروع",
+    duplicate: "نسخ المشروع",
+    duplicateHint: "ينشئ نسخة من محتوى هذا المشروع كنقطة بداية جديدة.",
   },
 
   review: {
@@ -314,6 +354,9 @@ const ar: Dict = {
     noDraftSave: "احفظي ملاحظاتك أولًا ثم ولّدي المسودة.",
     editByHand: "تعديل المسودة يدويًا",
     saveEditedDraft: "حفظ المسودة المعدلة",
+    wordCount: (n: number) => `${n} كلمة`,
+    copyDraft: "نسخ",
+    copied: "تم النسخ!",
     recentDrafts: "أحدث المسودات — قارني واختاري",
     current: "الحالية",
     makeCurrent: "اجعليها الحالية",
@@ -334,6 +377,13 @@ const ar: Dict = {
     weaknesses: "نقاط الضعف",
     tone: "النبرة",
     sources: "المصادر",
+    dimensionsHeading: "التقييم التفصيلي (من 10)",
+    dimension_positioningStrategy: "استراتيجية التموضع",
+    dimension_brandMessage: "رسالة العلامة",
+    dimension_personality: "الشخصية",
+    dimension_brandIdentity: "الهوية البصرية",
+    dimension_brandPresence: "الحضور الرقمي",
+    dimension_coreOffer: "العرض الأساسي",
   },
 
   status: {

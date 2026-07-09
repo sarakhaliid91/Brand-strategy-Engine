@@ -10,15 +10,22 @@ import {
 } from "@/lib/sections/queries";
 import { buildPrintHtml } from "@/lib/export/print-html";
 import { resolveChromiumExecutable } from "@/lib/export/chromium";
+import { isValidUuid } from "@/lib/db/uuid";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Serverless Chromium cold starts plus a full multi-section PDF render can
+// take a while; give it more room than the platform default.
+export const maxDuration = 60;
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id: projectId } = await params;
+  if (!isValidUuid(projectId)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   const session = await auth();
   if (!session?.user?.id) {

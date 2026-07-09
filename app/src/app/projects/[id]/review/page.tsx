@@ -10,6 +10,7 @@ import { localizedSection } from "@/lib/sections/types";
 import { SectionContentView } from "@/lib/sections/render";
 import { AppHeader, ProgressBar, ui } from "@/app/ui";
 import { getDict } from "@/lib/i18n";
+import { isValidUuid } from "@/lib/db/uuid";
 
 export default async function ReviewPage({
   params,
@@ -17,6 +18,7 @@ export default async function ReviewPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: projectId } = await params;
+  if (!isValidUuid(projectId)) notFound();
 
   const session = await auth();
   if (!session?.user?.id) redirect("/login");

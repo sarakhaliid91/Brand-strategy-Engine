@@ -2,8 +2,17 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getClientsWithProjects } from "@/lib/db/queries";
-import { createClientAction, createProjectAction } from "@/app/actions";
+import {
+  createClientAction,
+  createProjectAction,
+  deleteClientAction,
+  renameClientAction,
+  deleteProjectAction,
+  renameProjectAction,
+  duplicateProjectAction,
+} from "@/app/actions";
 import { AppHeader, ProgressBar, ui } from "@/app/ui";
+import { ConfirmSubmitButton, ClientSearchFilter } from "@/app/client-ui";
 import { getDict } from "@/lib/i18n";
 
 export default async function DashboardPage() {
@@ -51,12 +60,55 @@ export default async function DashboardPage() {
           </div>
         )}
 
+        {clients.length > 3 && (
+          <ClientSearchFilter
+            placeholder={t.dashboard.searchPlaceholder}
+            noMatches={t.dashboard.noSearchMatches}
+          />
+        )}
+
         <div className="flex flex-col gap-6">
           {clients.map((client) => (
-            <section key={client.id} className={`${ui.card} p-6 sm:p-7`}>
-              <h2 className="mb-4 font-display text-2xl font-bold text-ink">
-                {client.name}
-              </h2>
+            <section
+              key={client.id}
+              data-client-card
+              data-client-name={client.name}
+              className={`${ui.card} p-6 sm:p-7`}
+            >
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-display text-2xl font-bold text-ink">
+                  {client.name}
+                </h2>
+                <div className="flex items-center gap-1">
+                  <details className="group relative">
+                    <summary className="cursor-pointer list-none rounded-full px-3 py-1.5 text-xs font-semibold text-ink-soft transition hover:bg-ivory hover:text-ink">
+                      {t.dashboard.rename}
+                    </summary>
+                    <form
+                      action={renameClientAction.bind(null, client.id)}
+                      className="absolute end-0 top-full z-10 mt-1 flex gap-1.5 rounded-card border border-line bg-cream p-2 shadow-lg"
+                    >
+                      <input
+                        name="name"
+                        defaultValue={client.name}
+                        required
+                        autoFocus
+                        className={`${ui.input} w-48`}
+                      />
+                      <button type="submit" className={ui.btnSoft}>
+                        {t.dashboard.save}
+                      </button>
+                    </form>
+                  </details>
+                  <ConfirmSubmitButton
+                    action={deleteClientAction.bind(null, client.id)}
+                    confirmMessage={t.dashboard.confirmDeleteClient(client.name)}
+                    className="rounded-full px-3 py-1.5 text-xs font-semibold text-ink-soft transition hover:bg-peach-soft hover:text-ink"
+                  >
+                    {t.dashboard.delete}
+                  </ConfirmSubmitButton>
+                </div>
+              </div>
 
               <ul className="mb-5 flex flex-col gap-2.5">
                 {client.projects.map((project) => {
@@ -64,36 +116,81 @@ export default async function DashboardPage() {
                     project.totalCount > 0 &&
                     project.approvedCount === project.totalCount;
                   return (
-                    <li key={project.id}>
-                      <Link
-                        href={`/projects/${project.id}`}
-                        className="group flex items-center gap-4 rounded-card border border-line px-5 py-4 transition hover:border-plum hover:bg-ivory-dark/40"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-1.5 flex items-center gap-2">
-                            <span className="truncate text-sm font-bold text-ink">
-                              {project.name}
-                            </span>
-                            <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold uppercase text-ink-soft">
-                              {project.language === "ar" ? "العربية" : "EN"}
-                            </span>
-                          </div>
-                          <ProgressBar
-                            value={project.approvedCount}
-                            total={project.totalCount}
-                          />
-                        </div>
-                        <span
-                          className={`shrink-0 text-xs font-bold ${done ? "text-plum" : "text-ink-soft"}`}
+                    <li
+                      key={project.id}
+                      className="rounded-card border border-line transition hover:border-plum hover:bg-ivory-dark/40"
+                    >
+                      <div className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center">
+                        <Link
+                          href={`/projects/${project.id}`}
+                          className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4"
                         >
-                          {done
-                            ? t.dashboard.complete
-                            : t.dashboard.approvedOf(
-                                project.approvedCount,
-                                project.totalCount,
-                              )}
-                        </span>
-                      </Link>
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-1.5 flex items-center gap-2">
+                              <span className="truncate text-sm font-bold text-ink">
+                                {project.name}
+                              </span>
+                              <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-bold uppercase text-ink-soft">
+                                {project.language === "ar" ? "العربية" : "EN"}
+                              </span>
+                            </div>
+                            <ProgressBar
+                              value={project.approvedCount}
+                              total={project.totalCount}
+                            />
+                          </div>
+                          <span
+                            className={`shrink-0 text-xs font-bold ${done ? "text-plum" : "text-ink-soft"}`}
+                          >
+                            {done
+                              ? t.dashboard.complete
+                              : t.dashboard.approvedOf(
+                                  project.approvedCount,
+                                  project.totalCount,
+                                )}
+                          </span>
+                        </Link>
+                        <div className="flex shrink-0 flex-wrap items-center gap-0.5">
+                          <details className="group relative">
+                            <summary className="cursor-pointer list-none rounded-full px-2.5 py-1.5 text-[11px] font-semibold text-ink-soft transition hover:bg-ivory hover:text-ink">
+                              {t.dashboard.rename}
+                            </summary>
+                            <form
+                              action={renameProjectAction.bind(null, project.id)}
+                              className="absolute end-0 top-full z-10 mt-1 flex gap-1.5 rounded-card border border-line bg-cream p-2 shadow-lg"
+                            >
+                              <input
+                                name="name"
+                                defaultValue={project.name}
+                                required
+                                autoFocus
+                                className={`${ui.input} w-48`}
+                              />
+                              <button type="submit" className={ui.btnSoft}>
+                                {t.dashboard.save}
+                              </button>
+                            </form>
+                          </details>
+                          <form action={duplicateProjectAction.bind(null, project.id)}>
+                            <button
+                              type="submit"
+                              title={t.project.duplicateHint}
+                              className="rounded-full px-2.5 py-1.5 text-[11px] font-semibold text-ink-soft transition hover:bg-ivory hover:text-ink"
+                            >
+                              {t.dashboard.duplicate}
+                            </button>
+                          </form>
+                          <ConfirmSubmitButton
+                            action={deleteProjectAction.bind(null, project.id)}
+                            confirmMessage={t.dashboard.confirmDeleteProject(
+                              project.name,
+                            )}
+                            className="rounded-full px-2.5 py-1.5 text-[11px] font-semibold text-ink-soft transition hover:bg-peach-soft hover:text-ink"
+                          >
+                            {t.dashboard.delete}
+                          </ConfirmSubmitButton>
+                        </div>
+                      </div>
                     </li>
                   );
                 })}
