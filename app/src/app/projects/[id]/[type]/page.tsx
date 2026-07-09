@@ -21,7 +21,7 @@ import {
   SECTION_DEFINITIONS,
   ORDERED_SECTION_TYPES,
 } from "@/lib/sections/definitions";
-import { getAvailableProviders } from "@/lib/ai/client";
+import { getAvailableProviders, isProviderConfigured } from "@/lib/ai/client";
 import { AIProvider, PROVIDER_LABELS } from "@/lib/ai/providers/types";
 import {
   saveSectionAction,
@@ -524,11 +524,13 @@ function CompetitorAuditPanel({
   projectId,
   entries,
   hasAnyResearch,
+  researchAvailable,
   s,
 }: {
   projectId: string;
   entries: CompetitorEntry[];
   hasAnyResearch: boolean;
+  researchAvailable: boolean;
   s: Dict["section"];
 }) {
   return (
@@ -552,6 +554,12 @@ function CompetitorAuditPanel({
           {s.addCompetitor}
         </button>
       </form>
+
+      {!researchAvailable && (
+        <div className="rounded-card bg-peach-soft px-4 py-3 text-xs font-semibold text-ink">
+          {s.noKeyResearch}
+        </div>
+      )}
 
       {entries.length === 0 ? (
         <div className="rounded-card bg-ivory-dark px-6 py-8 text-center text-sm font-semibold text-plum">
@@ -578,7 +586,12 @@ function CompetitorAuditPanel({
                     <form
                       action={researchCompetitorAction.bind(null, projectId, entry.id)}
                     >
-                      <button type="submit" className={ui.btnSoft}>
+                      <button
+                        type="submit"
+                        disabled={!researchAvailable}
+                        title={researchAvailable ? undefined : s.noKeyResearch}
+                        className={ui.btnSoft}
+                      >
                         {result ? s.reResearch : s.research}
                       </button>
                     </form>
@@ -668,8 +681,14 @@ function CompetitorAuditPanel({
       <form action={synthesizeCompetitorsAction.bind(null, projectId)}>
         <button
           type="submit"
-          disabled={!hasAnyResearch}
-          title={hasAnyResearch ? undefined : s.researchFirst}
+          disabled={!hasAnyResearch || !researchAvailable}
+          title={
+            !researchAvailable
+              ? s.noKeyResearch
+              : hasAnyResearch
+                ? undefined
+                : s.researchFirst
+          }
           className={ui.btnDark}
         >
           {s.synthesize}
@@ -935,6 +954,7 @@ export default async function SectionWizardPage({
                 projectId={projectId}
                 entries={competitorEntries}
                 hasAnyResearch={hasAnyResearch}
+                researchAvailable={isProviderConfigured("anthropic")}
                 s={s}
               />
               {statement && (

@@ -73,6 +73,8 @@ const en = {
     approveHint: "Approving locks this in as context for the next sections.",
     aiDraft: "AI draft",
     noKey: "No AI key configured yet — add one in Vercel settings",
+    noKeyResearch:
+      "Competitor web research needs a Claude (Anthropic) key specifically — add ANTHROPIC_API_KEY in Vercel settings to turn this on.",
     generate: "Generate",
     regenerate: "Regenerate",
     withProvider: (action: string, provider: string) => `${action} with ${provider}`,
@@ -341,6 +343,8 @@ const ar: Dict = {
     approveHint: "الاعتماد يثبّت هذا القسم كمرجع للأقسام التالية.",
     aiDraft: "مسودة الذكاء الاصطناعي",
     noKey: "لم يُضف مفتاح ذكاء اصطناعي بعد — أضيفيه من إعدادات Vercel",
+    noKeyResearch:
+      "بحث المنافسين على الويب يحتاج تحديدًا مفتاح Claude (Anthropic) — أضيفي ANTHROPIC_API_KEY من إعدادات Vercel لتفعيل هذه الميزة.",
     generate: "توليد",
     regenerate: "إعادة التوليد",
     withProvider: (action: string, provider: string) => `${action} عبر ${provider}`,
